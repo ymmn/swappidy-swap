@@ -37,7 +37,7 @@ public class GameBoard {
 	public GameBoard(){
 		initBlocks();
 		//blocks = LeDebugTools.createBoardAtState(LeDebugTools.threeX3);
-		//testShrinking(blocks);
+		// testShrinking(blocks);
 		cursor = new Cursor(new Vector2(1,1));
 	}
 
