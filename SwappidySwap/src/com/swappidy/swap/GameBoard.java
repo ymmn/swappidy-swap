@@ -27,28 +27,36 @@ public class GameBoard {
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
 				blocks[i] = new Block(
-						new Vector2(x,y),
-						SwappidySwap.BLOCK_COLORS[ rng.nextInt(SwappidySwap.BLOCK_COLORS.length) ], 
-						SwappidySwap.BLOCK_SIZE);
+						new Vector2(SwappidySwap.BLOCK_SIZE*x, SwappidySwap.BLOCK_SIZE*y),
+						SwappidySwap.BLOCK_COLORS[ rng.nextInt(SwappidySwap.BLOCK_COLORS.length) ]);
 				i++;
 			}
 		}
 	}
-
+	
 	public GameBoard(){
 		initBlocks();
+		//blocks = LeDebugTools.createBoardAtState(LeDebugTools.threeX3);
+		//testShrinking(blocks);
 		cursor = new Cursor(new Vector2(1,1));
 	}
 
 	public void update(){
 		if(Gdx.input.isKeyPressed(Keys.DPAD_LEFT)) 
-			cursor.moveBy(-1, 0);
+			cursor.moveBy(-1*SwappidySwap.BLOCK_SIZE, 0);
 		if(Gdx.input.isKeyPressed(Keys.DPAD_RIGHT)) 
-			cursor.moveBy(1, 0);
+			cursor.moveBy(1*SwappidySwap.BLOCK_SIZE, 0);
 		if(Gdx.input.isKeyPressed(Keys.DPAD_UP)) 
-			cursor.moveBy(0, 1);
+			cursor.moveBy(0, 1*SwappidySwap.BLOCK_SIZE);
 		if(Gdx.input.isKeyPressed(Keys.DPAD_DOWN)) 
-			cursor.moveBy(0, -1);
+			cursor.moveBy(0, -1*SwappidySwap.BLOCK_SIZE);
+		
+		for(int i = 0; i < blocks.length; i++){
+			if(blocks[i]==null) continue;
+			
+			if(blocks[i].getState()==Block.State.DISAPPEARING && blocks[i].shrink())
+				blocks[i] = null;
+		}
 	}
 
 	public void draw(ShapeRenderer render){
