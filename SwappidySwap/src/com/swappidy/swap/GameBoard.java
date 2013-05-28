@@ -18,6 +18,8 @@ import com.badlogic.gdx.math.Vector2;
  */
 public class GameBoard {
 
+	public static float FALL_SPEED = 1;
+	private static final int NULL_BLOCK = 10323;
 	Block blocks [] = new Block[SwappidySwap.NUM_ROW * SwappidySwap.NUM_COL];
 	Random rng = new Random();
 	Cursor cursor;
@@ -33,15 +35,27 @@ public class GameBoard {
 			}
 		}
 	}
-	
+
 	public GameBoard(){
 		initBlocks();
-		//blocks = LeDebugTools.createBoardAtState(LeDebugTools.threeX3);
+		blocks = LeDebugTools.createBoardAtState(LeDebugTools.fallingTest);
 		// testShrinking(blocks);
 		cursor = new Cursor(new Vector2(1,1));
 	}
+	
+	/**
+	 * for testing
+	 * @param b
+	 */
+	public void setBlocks(Block[] b){
+		blocks = b;
+	}
+	
+	public Block[] getBlocks(){
+		return blocks;
+	}
 
-	public void update(){
+	public void processKeyboardInput(){
 		if(Gdx.input.isKeyPressed(Keys.DPAD_LEFT)) 
 			cursor.moveBy(-1*SwappidySwap.BLOCK_SIZE, 0);
 		if(Gdx.input.isKeyPressed(Keys.DPAD_RIGHT)) 
@@ -50,13 +64,80 @@ public class GameBoard {
 			cursor.moveBy(0, 1*SwappidySwap.BLOCK_SIZE);
 		if(Gdx.input.isKeyPressed(Keys.DPAD_DOWN)) 
 			cursor.moveBy(0, -1*SwappidySwap.BLOCK_SIZE);
+	}
+	
+	public void updateBlockState(){
+		// find blank spaces which we are free to move into, and set all the blocks above those blanks to falling  
+		for(int i = 0; i < blocks.length; i++){ 
+			int curPos = i;
+			if(blocks[i]==null)  //find the ones that should be falling and set them as falling
+				while( (curPos=getBlockAboveMe(curPos))!=NULL_BLOCK && blocks[curPos].getState()==Block.State.NORMAL){
+					blocks[curPos].setState(Block.State.FALLING);
+					System.out.println("woot");
+				}
+		}
 		
 		for(int i = 0; i < blocks.length; i++){
 			if(blocks[i]==null) continue;
-			
+
 			if(blocks[i].getState()==Block.State.DISAPPEARING && blocks[i].shrink())
 				blocks[i] = null;
 		}
+	}
+	
+	public void actionUpdate(){
+		fallDown();
+	}
+	
+	public void update(){
+		updateBlockState();
+		actionUpdate();
+		//System.out.println("hi");
+	}
+
+	int getBlockAboveMe(int refBlock){
+		if( (refBlock+SwappidySwap.NUM_COL<0 || refBlock+SwappidySwap.NUM_COL>=blocks.length) || blocks[refBlock+SwappidySwap.NUM_COL]==null) return NULL_BLOCK;
+		return refBlock+SwappidySwap.NUM_COL; 
+	}
+
+	private Vector2 getCoordinatePosition(int blockIndex){
+		int x = blockIndex % SwappidySwap.NUM_COL;
+		int y = blockIndex / SwappidySwap.NUM_COL;
+		return new Vector2(SwappidySwap.BLOCK_SIZE * x, SwappidySwap.BLOCK_SIZE*y);
+	}
+
+	/**
+	 * make blocks fall if they should
+	 */
+	void fallDown(){
+
+		int curPos;
+		for(int i = 0; i < blocks.length; i++){
+			curPos = i;
+
+			if(blocks[i]==null) continue;
+
+			//if midway falling, keep falling
+			if(blocks[i].getState()==Block.State.FALLING){
+
+				// if finished falling a complete grid coordinate, I no longer occupy the spot
+				// I fell from
+				int newIndex = curPos-SwappidySwap.NUM_COL;
+				if( blocks[curPos].getPosition().y-getCoordinatePosition(newIndex).y <= FALL_SPEED ){
+					blocks[curPos].setPosition(getCoordinatePosition(newIndex));
+					blocks[newIndex] = blocks[curPos]; //occupy the spot below me
+					blocks[curPos] = null;
+
+					//remove this later
+					blocks[newIndex].setState(Block.State.NORMAL);
+				}
+				else{ 
+					blocks[curPos].move(0, -1*FALL_SPEED);
+				}
+			}
+
+		} 
+
 	}
 
 	public void draw(ShapeRenderer render){

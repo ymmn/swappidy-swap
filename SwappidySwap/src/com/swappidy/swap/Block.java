@@ -7,7 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 public class Block {
 
 	public enum State{
-		NORMAL, DISAPPEARING
+		NORMAL, DISAPPEARING, FALLING
 	}
 
 	private static final int SHRINK_SPEED = 1;
@@ -47,6 +47,18 @@ public class Block {
 
 	public State getState(){
 		return state;
+	}
+	
+	public Vector2 getPosition(){
+		return position;
+	}
+
+	public void setPosition(Vector2 pos) {
+		position = pos;
+	}
+
+	public void move(int i, float j) {
+		position = new Vector2(position.x + i, position.y + j);
 	}
 	
 }

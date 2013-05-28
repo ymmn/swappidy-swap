@@ -12,7 +12,7 @@ import com.badlogic.gdx.Game;
 
 public class SwappidySwap extends Game {
 
-	public static final int BLOCK_SIZE = 100;
+	public static int BLOCK_SIZE = 100;
 	public static final int WORLD_HEIGHT = 700;
 	public static final int WORLD_WIDTH = 1000;
 	public static int NUM_ROW = 7;
