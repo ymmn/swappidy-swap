@@ -43,17 +43,7 @@ public class GameBoard {
 		cursor = new Cursor(new Vector2(1,1));
 	}
 	
-	/**
-	 * for testing
-	 * @param b
-	 */
-	public void setBlocks(Block[] b){
-		blocks = b;
-	}
-	
-	public Block[] getBlocks(){
-		return blocks;
-	}
+
 
 	public void processKeyboardInput(){
 		if(Gdx.input.isKeyPressed(Keys.DPAD_LEFT)) 
@@ -157,6 +147,21 @@ public class GameBoard {
 		}
 
 		cursor.draw(render);
+	}
+	
+	
+	/**
+	 * for testing
+	 * @param b
+	 */
+	@SuppressWarnings("unused")
+	private void setBlocks(Block[] b){
+		blocks = b;
+	}
+	
+	@SuppressWarnings("unused")
+	private Block[] getBlocks(){
+		return blocks;
 	}
 
 
