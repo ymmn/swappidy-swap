@@ -60,5 +60,9 @@ public class Block {
 	public void move(int i, float j) {
 		position = new Vector2(position.x + i, position.y + j);
 	}
+
+	public Color getColor() {
+		return myColor;
+	}
 	
 }
