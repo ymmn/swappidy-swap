@@ -25,14 +25,21 @@ public class GameBoard {
 	 * represents empty space (a real null in the blocks array), or a wall
 	 */
 	private static final int NULL_BLOCK = 10323;
-	Block blocks [] = new Block[SwappidySwap.NUM_ROW * SwappidySwap.NUM_COL];
+
+	/* 
+	 * Initialize the board for testing here
+	 * Otherwise leave uninitialized for randomized board
+	 */
+	Block blocks [] = LeDebugTools.createBoardAtState(LeDebugTools.threeX3);
 	Random rng = new Random();
 	Cursor cursor;
+
 
 	/**
 	 * random initiation of blocks. Fills entire screen.
 	 */
 	private void initBlocks(){
+		blocks = new Block[SwappidySwap.NUM_ROW * SwappidySwap.NUM_COL];
 		int i = 0;
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
@@ -45,8 +52,7 @@ public class GameBoard {
 	}
 
 	public GameBoard(){
-		initBlocks();
-		blocks = LeDebugTools.createBoardAtState(LeDebugTools.simpleVertCombo);
+		if(blocks==null) initBlocks();
 		// testShrinking(blocks);
 		cursor = new Cursor(new Vector2(1,1));
 	}
@@ -62,6 +68,8 @@ public class GameBoard {
 			cursor.moveBy(0, 1*SwappidySwap.BLOCK_SIZE);
 		if(Gdx.input.isKeyPressed(Keys.DPAD_DOWN)) 
 			cursor.moveBy(0, -1*SwappidySwap.BLOCK_SIZE);
+		if(Gdx.input.isKeyPressed(Keys.SPACE))
+			raiseStack();
 	}
 
 	/**
@@ -99,6 +107,7 @@ public class GameBoard {
 	}
 
 	public void update(){
+		processKeyboardInput();
 		updateBlockState();
 		actionUpdate();
 		//System.out.println("hi");
@@ -175,7 +184,7 @@ public class GameBoard {
 		for(int i=0; i < blocks.length; i++){
 
 			if(blocks[i]==null) continue;
-			
+
 			// only check blocks in a normal state (i.e. not falling or swapping)                        
 			if(blocks[i].getState()==Block.State.NORMAL){
 
@@ -258,10 +267,10 @@ public class GameBoard {
 		sameColorAsMe.put("south", 0);
 		sameColorAsMe.put("west", 0);
 		sameColorAsMe.put("east", 0);
-		
+
 		Color myColor = blocks[checkMe].getColor();
 		int curBlock; 
-		
+
 
 		/* check all 4 directions
 		 * 3 conditions to check:
@@ -317,6 +326,36 @@ public class GameBoard {
 				blocks[refBlock-1]==null) return NULL_BLOCK;
 		return refBlock-1; 
 	}  
+
+	/*
+	 * Adds in a new row of blocks at the bottom only if the top row is empty
+	 */
+	void raiseStack(){
+		System.out.println("aihegpoewhgawie");
+		// if there are blocks at the top row, then don't do anything
+		for(int i = 0; i < SwappidySwap.NUM_COL; i++){
+			if(blocks[blocks.length - 1 - i]!=null){
+				//game.gameOver();
+				System.out.println("game overrr");
+				return; 
+			}
+		}
+
+		// move all blocks up    
+		for(int i = 0; i < (blocks.length-SwappidySwap.NUM_COL); i++){
+			if(blocks[i]!=null){
+				blocks[i].move(0,SwappidySwap.BLOCK_SIZE);
+				blocks[i+SwappidySwap.NUM_COL] = blocks[i];
+			} 
+		}
+
+		// insert a new line of blocks in the bottom
+		for(int i = 0; i < SwappidySwap.NUM_COL; i++)
+			blocks[i] = new Block(
+					getPositionFromBlockIndex(i), 
+					SwappidySwap.BLOCK_COLORS[rng.nextInt(SwappidySwap.BLOCK_COLORS.length)]);
+	}
+
 
 	/**
 	 * for testing
