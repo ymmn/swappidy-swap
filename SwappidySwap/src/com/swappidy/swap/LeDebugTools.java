@@ -32,9 +32,10 @@ public class LeDebugTools {
 		"r"
 	};
 	
-	public static Block[] createBoardAtState(String[] board, GameBoard gboard){
+	public static Block[][] createBoardAtState(String[] board, GameBoard gboard){
 		SwappidySwap.NUM_COL = board[0].length();
-		Block[] retval = new Block[board.length * board[0].length()]; 
+		SwappidySwap.NUM_ROW = board.length;
+		Block[][] retval = new Block[board[0].length()][board.length]; 
 		for(int y = 0; y < board.length; y++){
 			for(int x = 0; x < board[board.length-1-y].length(); x++){
 				char c = board[y].charAt(x);
@@ -46,10 +47,9 @@ public class LeDebugTools {
 				else if(c=='g')
 					col = Color.GREEN;
 				
-				int ind = board[0].length()*(board.length-1-y) + x;
-				retval[ind] = new Block(
+				retval[x][board.length-1-y] = new Block(
 						new Vector2(SwappidySwap.BLOCK_SIZE*x, SwappidySwap.BLOCK_SIZE*(board.length-1-y)),
-						col, gboard, ind);
+						col, gboard);
 			}
 		}
 		return retval;

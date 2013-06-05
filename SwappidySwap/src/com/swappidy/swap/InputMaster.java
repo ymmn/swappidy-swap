@@ -16,6 +16,8 @@ public class InputMaster {
 			cursor.moveBy(0, -1*SwappidySwap.BLOCK_SIZE);
 		if(Gdx.input.isKeyPressed(Keys.SPACE))
 			gameboard.raiseStack();
+		if(Gdx.input.isKeyPressed(Keys.Z))
+			gameboard.attemptSwap();
 	}
 	
 }

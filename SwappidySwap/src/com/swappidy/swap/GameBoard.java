@@ -29,7 +29,7 @@ public class GameBoard {
 	 * Initialize the board for testing here
 	 * Otherwise leave uninitialized for randomized board
 	 */
-	Block blocks [];// = LeDebugTools.createBoardAtState(LeDebugTools.simpleVertCombo);
+	Block blocks[][]; // = LeDebugTools.createBoardAtState(LeDebugTools.fallingTest, this);
 	Random rng = new Random();
 	Cursor cursor;
 
@@ -38,15 +38,13 @@ public class GameBoard {
 	 * random initiation of blocks. Fills entire screen.
 	 */
 	private void initBlocks(){
-		blocks = new Block[SwappidySwap.NUM_ROW * SwappidySwap.NUM_COL];
-		int i = 0;
+		blocks = new Block[SwappidySwap.NUM_COL][SwappidySwap.NUM_ROW];
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-				blocks[i] = new Block(
+				blocks[x][y] = new Block(
 						new Vector2(SwappidySwap.BLOCK_SIZE*x, SwappidySwap.BLOCK_SIZE*y),
 						SwappidySwap.BLOCK_COLORS[ rng.nextInt(SwappidySwap.BLOCK_COLORS.length) ],
-						this, i);
-				i++;
+						this);
 			}
 		}
 	}
@@ -67,12 +65,19 @@ public class GameBoard {
 	 */
 	public void updateBlockState(){
 		// find blank spaces which we are free to move into, and set all the blocks above those blanks to falling  
-		for(int i = 0; i < blocks.length; i++){ 
-			int curPos = i;
-			if(blocks[i]==null)  //find the ones that should be falling and set them as falling
-				while( (curPos=getIndexOfBlockAboveMe(curPos))!=NULL_BLOCK && blocks[curPos].getState()==Block.State.NORMAL){
-					blocks[curPos].setState(Block.State.FALLING);
+		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
+			for(int x=0;x<SwappidySwap.NUM_COL;x++){
+//			int curPos = i;
+				
+				if(blocks[x][y]==null){  //find the ones that should be falling and set them as falling
+					int curY = y + 1;
+					while(curY < SwappidySwap.NUM_ROW && blocks[x][curY]!= null &&
+							blocks[x][curY].getState()==Block.State.NORMAL){
+						blocks[x][curY].setState(Block.State.FALLING);
+						curY++;
+					}
 				}
+			}
 		}
 
 		detectCombos();
@@ -85,9 +90,10 @@ public class GameBoard {
 	 */
 	public void actionUpdate(){
 		/* let disappearing blocks disappear */
-		for(int i = 0; i < blocks.length; i++){
-			if(blocks[i]==null) continue;
-			blocks[i].update();
+		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
+			for(int x=0;x<SwappidySwap.NUM_COL;x++){
+				if(blocks[x][y]!=null) blocks[x][y].update();
+			}
 		}
 	}
 
@@ -114,16 +120,20 @@ public class GameBoard {
 
 		/* draw blocks */
 		render.begin(ShapeType.Filled);
-		for(int i=0;i<blocks.length;i++){
-			if(blocks[i]!=null) blocks[i].draw(render); 
+		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
+			for(int x=0;x<SwappidySwap.NUM_COL;x++){
+				if(blocks[x][y]!=null) blocks[x][y].draw(render); 
+			}
 		}
 		render.end();
 
 		/* draw borders on the blocks so they don't mush */
 		render.begin(ShapeType.Line);
 		render.setColor(Color.BLACK);
-		for(int i=0;i<blocks.length;i++){
-			if(blocks[i]!=null) blocks[i].drawBorder(render); 
+		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
+			for(int x=0;x<SwappidySwap.NUM_COL;x++){
+				if(blocks[x][y]!=null) blocks[x][y].drawBorder(render); 
+			}
 		}
 
 		cursor.draw(render);
@@ -131,23 +141,23 @@ public class GameBoard {
 
 	void detectCombos(){
 
-		int[] indicesOfBlocksInCombo;
-		for(int i=0; i < blocks.length; i++){
-
-			if(blocks[i]==null) continue;
-
-			// only check blocks in a normal state (i.e. not falling or swapping)                        
-			if(blocks[i].getState()==Block.State.NORMAL){
-
-				indicesOfBlocksInCombo = detectBlocksInCombo(i);
-
-				// set the blocks to disappear 
-				for(int j = 0; j < indicesOfBlocksInCombo.length; j++){
-					blocks[indicesOfBlocksInCombo[j]].setState(Block.State.DISAPPEARING);
-				}
-
-			}  
-		}
+//		int[] indicesOfBlocksInCombo;
+//		for(int i=0; i < blocks.length; i++){
+//
+//			if(blocks[i]==null) continue;
+//
+//			// only check blocks in a normal state (i.e. not falling or swapping)                        
+//			if(blocks[i].getState()==Block.State.NORMAL){
+//
+//				indicesOfBlocksInCombo = detectBlocksInCombo(i);
+//
+//				// set the blocks to disappear 
+//				for(int j = 0; j < indicesOfBlocksInCombo.length; j++){
+//					blocks[indicesOfBlocksInCombo[j]].setState(Block.State.DISAPPEARING);
+//				}
+//
+//			}  
+//		}
 
 	}
 
@@ -213,48 +223,48 @@ public class GameBoard {
 	 */
 	Map<String,Integer> checkColorsAroundMe(int checkMe){
 
-		HashMap<String,Integer> sameColorAsMe = new HashMap<String,Integer>();
-		sameColorAsMe.put("north", 0);
-		sameColorAsMe.put("south", 0);
-		sameColorAsMe.put("west", 0);
-		sameColorAsMe.put("east", 0);
+//		HashMap<String,Integer> sameColorAsMe = new HashMap<String,Integer>();
+//		sameColorAsMe.put("north", 0);
+//		sameColorAsMe.put("south", 0);
+//		sameColorAsMe.put("west", 0);
+//		sameColorAsMe.put("east", 0);
+//
+//		Color myColor = blocks[checkMe].getColor();
+//		int curBlock; 
+//
+//
+//		/* check all 4 directions
+//		 * 3 conditions to check:
+//		 * 1) the block isn't a NULL_BLOCK (empty space or a wall)
+//		 * 2) its color matches my color
+//		 * 3) it's in a normal state (e.g. not being swapped or falling) 
+//		 */
+//		// check up
+//		curBlock = checkMe;
+//		while(getIndexOfBlockAboveMe(curBlock)!=NULL_BLOCK && myColor==blocks[curBlock=getIndexOfBlockAboveMe(curBlock)].getColor() 
+//				&& (blocks[curBlock].getState()==Block.State.NORMAL) )
+//			sameColorAsMe.put("north", sameColorAsMe.get("north") + 1);
+//
+//		// check to the right
+//		curBlock = checkMe;
+//		while(getIndexOfBlockRightOfMe(curBlock)!=NULL_BLOCK && myColor==blocks[curBlock=getIndexOfBlockRightOfMe(curBlock)].getColor()
+//				&& (blocks[curBlock].getState()==Block.State.NORMAL) )
+//			sameColorAsMe.put("east", sameColorAsMe.get("east") + 1);
+//
+//		// check below
+//		curBlock = checkMe;
+//		while(getIndexOfBlockBelowMe(curBlock)!=NULL_BLOCK && myColor==blocks[curBlock=getIndexOfBlockBelowMe(curBlock)].getColor() 
+//				&& (blocks[curBlock].getState()==Block.State.NORMAL) )
+//			sameColorAsMe.put("south", sameColorAsMe.get("south") + 1);
+//
+//		// check to the left
+//		curBlock = checkMe;
+//		while(getIndexOfBlockLeftOfMe(curBlock)!=NULL_BLOCK && myColor==blocks[curBlock=getIndexOfBlockLeftOfMe(curBlock)].getColor() 
+//				&& (blocks[curBlock].getState()==Block.State.NORMAL) )
+//			sameColorAsMe.put("west", sameColorAsMe.get("west") + 1);
 
-		Color myColor = blocks[checkMe].getColor();
-		int curBlock; 
-
-
-		/* check all 4 directions
-		 * 3 conditions to check:
-		 * 1) the block isn't a NULL_BLOCK (empty space or a wall)
-		 * 2) its color matches my color
-		 * 3) it's in a normal state (e.g. not being swapped or falling) 
-		 */
-		// check up
-		curBlock = checkMe;
-		while(getIndexOfBlockAboveMe(curBlock)!=NULL_BLOCK && myColor==blocks[curBlock=getIndexOfBlockAboveMe(curBlock)].getColor() 
-				&& (blocks[curBlock].getState()==Block.State.NORMAL) )
-			sameColorAsMe.put("north", sameColorAsMe.get("north") + 1);
-
-		// check to the right
-		curBlock = checkMe;
-		while(getIndexOfBlockRightOfMe(curBlock)!=NULL_BLOCK && myColor==blocks[curBlock=getIndexOfBlockRightOfMe(curBlock)].getColor()
-				&& (blocks[curBlock].getState()==Block.State.NORMAL) )
-			sameColorAsMe.put("east", sameColorAsMe.get("east") + 1);
-
-		// check below
-		curBlock = checkMe;
-		while(getIndexOfBlockBelowMe(curBlock)!=NULL_BLOCK && myColor==blocks[curBlock=getIndexOfBlockBelowMe(curBlock)].getColor() 
-				&& (blocks[curBlock].getState()==Block.State.NORMAL) )
-			sameColorAsMe.put("south", sameColorAsMe.get("south") + 1);
-
-		// check to the left
-		curBlock = checkMe;
-		while(getIndexOfBlockLeftOfMe(curBlock)!=NULL_BLOCK && myColor==blocks[curBlock=getIndexOfBlockLeftOfMe(curBlock)].getColor() 
-				&& (blocks[curBlock].getState()==Block.State.NORMAL) )
-			sameColorAsMe.put("west", sameColorAsMe.get("west") + 1);
-
-		return sameColorAsMe;
-
+//		return sameColorAsMe;
+		return null;
 	}
 
 	int getIndexOfBlockBelowMe(int refBlock){
@@ -282,30 +292,30 @@ public class GameBoard {
 	 * Adds in a new row of blocks at the bottom only if the top row is empty
 	 */
 	public void raiseStack(){
-		System.out.println("aihegpoewhgawie");
-		// if there are blocks at the top row, then don't do anything
-		for(int i = 0; i < SwappidySwap.NUM_COL; i++){
-			if(blocks[blocks.length - 1 - i]!=null){
-				//game.gameOver();
-				System.out.println("game overrr");
-				return; 
-			}
-		}
-
-		// move all blocks up    
-		for(int i = 0; i < (blocks.length-SwappidySwap.NUM_COL); i++){
-			if(blocks[i]!=null){
-				blocks[i].move(0,SwappidySwap.BLOCK_SIZE);
-				blocks[i+SwappidySwap.NUM_COL] = blocks[i];
-			} 
-		}
-
-		// insert a new line of blocks in the bottom
-		for(int i = 0; i < SwappidySwap.NUM_COL; i++)
-			blocks[i] = new Block(
-					getPositionFromBlockIndex(i), 
-					SwappidySwap.BLOCK_COLORS[rng.nextInt(SwappidySwap.BLOCK_COLORS.length)],
-					this, i);
+//		System.out.println("aihegpoewhgawie");
+//		// if there are blocks at the top row, then don't do anything
+//		for(int i = 0; i < SwappidySwap.NUM_COL; i++){
+//			if(blocks[blocks.length - 1 - i]!=null){
+//				//game.gameOver();
+//				System.out.println("game overrr");
+//				return; 
+//			}
+//		}
+//
+//		// move all blocks up    
+//		for(int i = 0; i < (blocks.length-SwappidySwap.NUM_COL); i++){
+//			if(blocks[i]!=null){
+//				blocks[i].move(0,SwappidySwap.BLOCK_SIZE);
+//				blocks[i+SwappidySwap.NUM_COL] = blocks[i];
+//			} 
+//		}
+//
+//		// insert a new line of blocks in the bottom
+//		for(int i = 0; i < SwappidySwap.NUM_COL; i++)
+//			blocks[i] = new Block(
+//					getPositionFromBlockIndex(i), 
+//					SwappidySwap.BLOCK_COLORS[rng.nextInt(SwappidySwap.BLOCK_COLORS.length)],
+//					this, i);
 	}
 
 
@@ -314,22 +324,26 @@ public class GameBoard {
 	 * @param b
 	 */
 	@SuppressWarnings("unused")
-	private void setBlocks(Block[] b){
+	private void setBlocks(Block[][] b){
 		blocks = b;
 	}
 
 	@SuppressWarnings("unused")
-	private Block[] getBlocks(){
+	private Block[][] getBlocks(){
 		return blocks;
 	}
 
-	public void removeBlock(int index) {
-		blocks[index] = null;
+	public void removeBlock(Vector2 gridpos) {
+		blocks[(int) gridpos.x][(int) gridpos.y] = null;
 	}
 
-	public void handleCompletedFalling(int oldIndex, int newIndex) {
-		blocks[newIndex] = blocks[oldIndex]; //occupy the spot below me
-		blocks[oldIndex] = null;
+	public void handleCompletedFalling(int oldx, int oldy) {
+		blocks[oldx][oldy-1] = blocks[oldx][oldy]; //occupy the spot below me
+		blocks[oldx][oldy] = null;
+	}
+
+	public void attemptSwap() {
+		
 	}
 
 

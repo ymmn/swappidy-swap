@@ -27,13 +27,13 @@ public class SwappidyTest {
 	public void testFallingBlockState() {
 		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.fallingTest,gboard) });
 		gboard.updateBlockState();
-		Block[] blocks = (Block[])callPrivateMethod("getBlocks", new Object[0]);
-		for(int i = 0; i < 3; i++)
-			if(blocks[i].getState()!=Block.State.NORMAL)
+		Block[][] blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
+		for(int x = 0; x < 3; x++){
+			if(blocks[x][0].getState()!=Block.State.NORMAL)
 				fail("Blocks are falling when they shouldn't");
-		for(int i = 6; i < 9; i++)
-			if(blocks[i].getState()!=Block.State.FALLING)
+			if(blocks[x][2].getState()!=Block.State.FALLING)
 				fail("Blocks aren't falling when they should");
+		}
 	}
 	
 	@Test
@@ -43,19 +43,17 @@ public class SwappidyTest {
 		for(int i = 0; i < 100; i++){
 			gboard.actionUpdate();
 		}
-		Block[] blocks = (Block[])callPrivateMethod("getBlocks", new Object[0]);
-		for(int i = 0; i < 3; i++)
-			if(blocks[i].getState()!=Block.State.NORMAL)
+		Block[][] blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
+		for(int x = 0; x < 3; x++){
+			if(blocks[x][0].getState()!=Block.State.NORMAL)
 				fail("Wait wut?");
-		for(int i = 3; i < 6; i++){
-			if(blocks[i]==null)
+			if(blocks[x][1]==null)
 				fail("Blocks haven't fallen to their slot");
-			if(blocks[i].getState()==Block.State.FALLING)
+			if(blocks[x][1].getState()==Block.State.FALLING)
 				fail("Blocks are still falling when they should stop");
-		}
-		for(int i = 6; i < 9; i++)
-			if(blocks[i]!=null)
+			if(blocks[x][2]!=null)
 				fail("Blocks are still occupying their previous slot");
+		}
 	}
 	
 	private Object callPrivateMethod(String name, Object[] params){

@@ -6,9 +6,9 @@ import com.badlogic.gdx.math.Vector2;
 
 public class Cursor {
 
-	  Vector2 position;
-	  Vector2 DIMS;
-	  Color myColor = Color.GRAY;
+	  private Vector2 position;
+	  private Vector2 DIMS;
+	  private Color myColor = Color.GRAY;
 	  
 	  public Cursor(Vector2 pos){
 		    position = pos;
@@ -23,6 +23,10 @@ public class Cursor {
 	  void moveBy(int x, int y){
 		  position.x += x;
 		  position.y += y;
+	  }
+	  
+	  public Vector2 getPosition(){
+		  return position;
 	  }
 
 }

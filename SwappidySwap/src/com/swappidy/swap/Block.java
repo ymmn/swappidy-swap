@@ -17,14 +17,14 @@ public class Block {
 	private Vector2 DIMS;
 	private Color myColor;
 	private int shrinkBy;
-	private int myIndex;
+	private Vector2 myGridPos;
 	private GameBoard gameboard;
 
-	Block(Vector2 pos, Color col, GameBoard gboard, int ind){
+	Block(Vector2 pos, Color col, GameBoard gboard){
 		position = pos;
 		myColor = col;
 		gameboard = gboard;
-		myIndex = ind;
+		myGridPos = new Vector2(pos.x/SwappidySwap.BLOCK_SIZE, pos.y/SwappidySwap.BLOCK_SIZE);
 		DIMS = new Vector2(SwappidySwap.BLOCK_SIZE, SwappidySwap.BLOCK_SIZE);
 	}
 
@@ -33,7 +33,7 @@ public class Block {
 			shrinkBy += SHRINK_SPEED;
 			return;
 		}
-		gameboard.removeBlock(myIndex);
+		gameboard.removeBlock(myGridPos);
 	}
 	
 	public void update(){
@@ -46,11 +46,12 @@ public class Block {
 	private void fallDown(){
 		// if finished falling a complete grid coordinate, I no longer occupy the spot
 		// I fell from
-		int newIndex = myIndex-SwappidySwap.NUM_COL;
-		if( position.y - gameboard.getPositionFromBlockIndex(newIndex).y <= GameBoard.FALL_SPEED ){
-			position = gameboard.getPositionFromBlockIndex(newIndex);
-			gameboard.handleCompletedFalling(myIndex, newIndex);
-			myIndex = newIndex;
+		int targetYGridPos = (int) (myGridPos.y - 1);
+		int targetYPos = targetYGridPos*SwappidySwap.BLOCK_SIZE;
+		if( position.y - targetYPos <= GameBoard.FALL_SPEED ){
+			position.y = targetYPos;
+			gameboard.handleCompletedFalling((int)myGridPos.x, (int)myGridPos.y);
+			myGridPos.y--;
 
 			//remove this later
 			state = Block.State.NORMAL;
@@ -91,10 +92,6 @@ public class Block {
 
 	public Color getColor() {
 		return myColor;
-	}
-
-	public void setIndex(int newIndex) {
-		myIndex = newIndex;
 	}
 	
 }
