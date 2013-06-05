@@ -28,12 +28,11 @@ public class Block {
 		DIMS = new Vector2(SwappidySwap.BLOCK_SIZE, SwappidySwap.BLOCK_SIZE);
 	}
 
-	public void shrink(){ // returns true if small enough
+	private void shrink(){ // returns true if small enough
 		if(shrinkBy<DIMS.x){
 			shrinkBy += SHRINK_SPEED;
 			return;
 		}
-		
 		gameboard.removeBlock(myIndex);
 	}
 	
@@ -44,9 +43,21 @@ public class Block {
 			fallDown();
 	}
 	
-	public void fallDown(){
-		
-		
+	private void fallDown(){
+		// if finished falling a complete grid coordinate, I no longer occupy the spot
+		// I fell from
+		int newIndex = myIndex-SwappidySwap.NUM_COL;
+		if( position.y - gameboard.getPositionFromBlockIndex(newIndex).y <= GameBoard.FALL_SPEED ){
+			position = gameboard.getPositionFromBlockIndex(newIndex);
+			gameboard.handleCompletedFalling(myIndex, newIndex);
+			myIndex = newIndex;
+
+			//remove this later
+			state = Block.State.NORMAL;
+		}
+		else{ 
+			move(0, -1*GameBoard.FALL_SPEED);
+		}
 	}
 
 	void draw(ShapeRenderer render){

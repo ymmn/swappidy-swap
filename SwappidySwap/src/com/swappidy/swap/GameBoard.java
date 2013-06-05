@@ -84,14 +84,10 @@ public class GameBoard {
 	 * e.g. shrink, swap, etc.
 	 */
 	public void actionUpdate(){
-		fallDown();
-
 		/* let disappearing blocks disappear */
 		for(int i = 0; i < blocks.length; i++){
 			if(blocks[i]==null) continue;
 			blocks[i].update();
-			//if(blocks[i].getState()==Block.State.DISAPPEARING && blocks[i].shrink())
-			//	blocks[i] = null;
 		}
 	}
 
@@ -99,7 +95,6 @@ public class GameBoard {
 		InputMaster.processKeyboardInput(this, cursor);
 		updateBlockState();
 		actionUpdate();
-		//System.out.println("hi");
 	}
 
 	int getIndexOfBlockAboveMe(int refBlock){
@@ -108,46 +103,12 @@ public class GameBoard {
 	}
 
 
-	private Vector2 getPositionFromBlockIndex(int blockIndex){
+	Vector2 getPositionFromBlockIndex(int blockIndex){
 		int x = blockIndex % SwappidySwap.NUM_COL;
 		int y = blockIndex / SwappidySwap.NUM_COL;
 		return new Vector2(SwappidySwap.BLOCK_SIZE * x, SwappidySwap.BLOCK_SIZE*y);
 	}
 
-	/**
-	 * make blocks fall if they should
-	 */
-	void fallDown(){
-
-		int curPos;
-		for(int i = 0; i < blocks.length; i++){
-			curPos = i;
-
-			if(blocks[i]==null) continue;
-
-			//if midway falling, keep falling
-			if(blocks[i].getState()==Block.State.FALLING){
-
-				// if finished falling a complete grid coordinate, I no longer occupy the spot
-				// I fell from
-				int newIndex = curPos-SwappidySwap.NUM_COL;
-				if( blocks[curPos].getPosition().y-getPositionFromBlockIndex(newIndex).y <= FALL_SPEED ){
-					blocks[curPos].setPosition(getPositionFromBlockIndex(newIndex));
-					blocks[newIndex] = blocks[curPos]; //occupy the spot below me
-					blocks[newIndex].setIndex(newIndex);
-					blocks[curPos] = null;
-
-					//remove this later
-					blocks[newIndex].setState(Block.State.NORMAL);
-				}
-				else{ 
-					blocks[curPos].move(0, -1*FALL_SPEED);
-				}
-			}
-
-		} 
-
-	}
 
 	public void draw(ShapeRenderer render){
 
@@ -364,6 +325,11 @@ public class GameBoard {
 
 	public void removeBlock(int index) {
 		blocks[index] = null;
+	}
+
+	public void handleCompletedFalling(int oldIndex, int newIndex) {
+		blocks[newIndex] = blocks[oldIndex]; //occupy the spot below me
+		blocks[oldIndex] = null;
 	}
 
 
