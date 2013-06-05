@@ -44,7 +44,8 @@ public class GameBoard {
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
 				blocks[i] = new Block(
 						new Vector2(SwappidySwap.BLOCK_SIZE*x, SwappidySwap.BLOCK_SIZE*y),
-						SwappidySwap.BLOCK_COLORS[ rng.nextInt(SwappidySwap.BLOCK_COLORS.length) ]);
+						SwappidySwap.BLOCK_COLORS[ rng.nextInt(SwappidySwap.BLOCK_COLORS.length) ],
+						this, i);
 				i++;
 			}
 		}
@@ -88,9 +89,9 @@ public class GameBoard {
 		/* let disappearing blocks disappear */
 		for(int i = 0; i < blocks.length; i++){
 			if(blocks[i]==null) continue;
-
-			if(blocks[i].getState()==Block.State.DISAPPEARING && blocks[i].shrink())
-				blocks[i] = null;
+			blocks[i].update();
+			//if(blocks[i].getState()==Block.State.DISAPPEARING && blocks[i].shrink())
+			//	blocks[i] = null;
 		}
 	}
 
@@ -133,6 +134,7 @@ public class GameBoard {
 				if( blocks[curPos].getPosition().y-getPositionFromBlockIndex(newIndex).y <= FALL_SPEED ){
 					blocks[curPos].setPosition(getPositionFromBlockIndex(newIndex));
 					blocks[newIndex] = blocks[curPos]; //occupy the spot below me
+					blocks[newIndex].setIndex(newIndex);
 					blocks[curPos] = null;
 
 					//remove this later
@@ -341,7 +343,8 @@ public class GameBoard {
 		for(int i = 0; i < SwappidySwap.NUM_COL; i++)
 			blocks[i] = new Block(
 					getPositionFromBlockIndex(i), 
-					SwappidySwap.BLOCK_COLORS[rng.nextInt(SwappidySwap.BLOCK_COLORS.length)]);
+					SwappidySwap.BLOCK_COLORS[rng.nextInt(SwappidySwap.BLOCK_COLORS.length)],
+					this, i);
 	}
 
 
@@ -357,6 +360,10 @@ public class GameBoard {
 	@SuppressWarnings("unused")
 	private Block[] getBlocks(){
 		return blocks;
+	}
+
+	public void removeBlock(int index) {
+		blocks[index] = null;
 	}
 
 

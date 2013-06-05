@@ -17,19 +17,36 @@ public class Block {
 	private Vector2 DIMS;
 	private Color myColor;
 	private int shrinkBy;
+	private int myIndex;
+	private GameBoard gameboard;
 
-	Block(Vector2 pos, Color col){
+	Block(Vector2 pos, Color col, GameBoard gboard, int ind){
 		position = pos;
 		myColor = col;
+		gameboard = gboard;
+		myIndex = ind;
 		DIMS = new Vector2(SwappidySwap.BLOCK_SIZE, SwappidySwap.BLOCK_SIZE);
 	}
 
-	public boolean shrink(){ // returns true if small enough
+	public void shrink(){ // returns true if small enough
 		if(shrinkBy<DIMS.x){
 			shrinkBy += SHRINK_SPEED;
-			return false;
+			return;
 		}
-		return true;
+		
+		gameboard.removeBlock(myIndex);
+	}
+	
+	public void update(){
+		if(state==State.DISAPPEARING)
+			shrink();
+		if(state==State.FALLING)
+			fallDown();
+	}
+	
+	public void fallDown(){
+		
+		
 	}
 
 	void draw(ShapeRenderer render){
@@ -63,6 +80,10 @@ public class Block {
 
 	public Color getColor() {
 		return myColor;
+	}
+
+	public void setIndex(int newIndex) {
+		myIndex = newIndex;
 	}
 	
 }

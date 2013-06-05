@@ -25,7 +25,7 @@ public class SwappidyTest {
 
 	@Test
 	public void testFallingBlockState() {
-		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.fallingTest) });
+		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.fallingTest,gboard) });
 		gboard.updateBlockState();
 		Block[] blocks = (Block[])callPrivateMethod("getBlocks", new Object[0]);
 		for(int i = 0; i < 3; i++)
@@ -38,7 +38,7 @@ public class SwappidyTest {
 	
 	@Test
 	public void testFallingBlocks() {
-		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.fallingTest) });
+		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.fallingTest,gboard) });
 		gboard.updateBlockState();
 		for(int i = 0; i < 100; i++){
 			gboard.actionUpdate();
