@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
@@ -21,16 +19,17 @@ import com.badlogic.gdx.math.Vector2;
 public class GameBoard {
 
 	public static float FALL_SPEED = 1;
+	
 	/**
 	 * represents empty space (a real null in the blocks array), or a wall
 	 */
 	private static final int NULL_BLOCK = 10323;
 
-	/* 
+	/**
 	 * Initialize the board for testing here
 	 * Otherwise leave uninitialized for randomized board
 	 */
-	Block blocks [] = LeDebugTools.createBoardAtState(LeDebugTools.threeX3);
+	Block blocks [];// = LeDebugTools.createBoardAtState(LeDebugTools.simpleVertCombo);
 	Random rng = new Random();
 	Cursor cursor;
 
@@ -59,18 +58,7 @@ public class GameBoard {
 
 
 
-	public void processKeyboardInput(){
-		if(Gdx.input.isKeyPressed(Keys.DPAD_LEFT)) 
-			cursor.moveBy(-1*SwappidySwap.BLOCK_SIZE, 0);
-		if(Gdx.input.isKeyPressed(Keys.DPAD_RIGHT)) 
-			cursor.moveBy(1*SwappidySwap.BLOCK_SIZE, 0);
-		if(Gdx.input.isKeyPressed(Keys.DPAD_UP)) 
-			cursor.moveBy(0, 1*SwappidySwap.BLOCK_SIZE);
-		if(Gdx.input.isKeyPressed(Keys.DPAD_DOWN)) 
-			cursor.moveBy(0, -1*SwappidySwap.BLOCK_SIZE);
-		if(Gdx.input.isKeyPressed(Keys.SPACE))
-			raiseStack();
-	}
+
 
 	/**
 	 * updates states of blocks (duh)
@@ -107,7 +95,7 @@ public class GameBoard {
 	}
 
 	public void update(){
-		processKeyboardInput();
+		InputMaster.processKeyboardInput(this, cursor);
 		updateBlockState();
 		actionUpdate();
 		//System.out.println("hi");
@@ -330,7 +318,7 @@ public class GameBoard {
 	/*
 	 * Adds in a new row of blocks at the bottom only if the top row is empty
 	 */
-	void raiseStack(){
+	public void raiseStack(){
 		System.out.println("aihegpoewhgawie");
 		// if there are blocks at the top row, then don't do anything
 		for(int i = 0; i < SwappidySwap.NUM_COL; i++){
