@@ -7,7 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 public class Block {
 
 	public enum State{
-		NORMAL, DISAPPEARING, FALLING
+		NORMAL, DISAPPEARING, FALLING, SWAPPING
 	}
 
 	private static final int SHRINK_SPEED = 1;
@@ -18,6 +18,7 @@ public class Block {
 	private Color myColor;
 	private int shrinkBy;
 	private Vector2 myGridPos;
+	private int swapDirection;
 	private GameBoard gameboard;
 
 	Block(Vector2 pos, Color col, GameBoard gboard){
@@ -41,6 +42,8 @@ public class Block {
 			shrink();
 		if(state==State.FALLING)
 			fallDown();
+		if(state==State.SWAPPING)
+			swap();
 	}
 	
 	private void fallDown(){
@@ -57,7 +60,26 @@ public class Block {
 			state = Block.State.NORMAL;
 		}
 		else{ 
-			move(0, -1*GameBoard.FALL_SPEED);
+			position.y += -1*GameBoard.FALL_SPEED;
+		}
+	}
+	
+	private void swap(){
+		// if finished falling a complete grid coordinate, I no longer occupy the spot
+		// I fell from
+		int targetXGridPos = (int) (myGridPos.x + swapDirection);
+		int targetXPos = targetXGridPos*SwappidySwap.BLOCK_SIZE;
+		if( Math.abs(position.x - targetXPos) <= GameBoard.SWAP_SPEED ){
+			position.x = targetXPos;
+			if(swapDirection==1) // we only need one of the pair to notify the gameboard
+				gameboard.handleCompletedSwapping((int)myGridPos.x, (int)myGridPos.y);
+			myGridPos.x += swapDirection;
+
+			//remove this later
+			state = Block.State.NORMAL;
+		}
+		else{ 
+			position.x += swapDirection*GameBoard.SWAP_SPEED;
 		}
 	}
 
@@ -86,12 +108,12 @@ public class Block {
 		position = pos;
 	}
 
-	public void move(int i, float j) {
-		position = new Vector2(position.x + i, position.y + j);
-	}
-
 	public Color getColor() {
 		return myColor;
+	}
+
+	public void setSwapDirection(int i) {
+		swapDirection = i;
 	}
 	
 }

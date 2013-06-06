@@ -20,6 +20,7 @@ public class SwappidyTest {
 	public void setUp() throws Exception {
 		gboard = new GameBoard();
 		GameBoard.FALL_SPEED = 1;
+		GameBoard.SWAP_SPEED = 1;
 		SwappidySwap.BLOCK_SIZE = 100;
 	}
 
@@ -33,6 +34,46 @@ public class SwappidyTest {
 				fail("Blocks are falling when they shouldn't");
 			if(blocks[x][2].getState()!=Block.State.FALLING)
 				fail("Blocks aren't falling when they should");
+		}
+	}
+	
+	@Test
+	public void testSwappingBlockState() {
+		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.twoX2,gboard) });
+		callPrivateMethod("moveCursorTo", new Object[]{ 0,0 });
+		gboard.attemptSwap();
+		gboard.updateBlockState();
+		Block[][] blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
+		for(int x = 0; x < 2; x++){
+			if(blocks[x][0].getState()!=Block.State.SWAPPING)
+				fail("Blocks aren't swapping when they should");
+			if(blocks[x][1].getState()!=Block.State.NORMAL)
+				fail("Aaaaand something funky is happening up there");
+		}
+	}
+	
+	@Test
+	public void testSwappingBlocks() {
+		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.twoX2,gboard) });
+		callPrivateMethod("moveCursorTo", new Object[]{ 0,0 });
+		Block[][] blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
+		Block oldLeft = blocks[0][0];
+		Block oldRight = blocks[1][0];
+		gboard.attemptSwap();
+		gboard.updateBlockState();
+		for(int i = 0; i < 101; i++){
+			gboard.actionUpdate();
+		}
+		blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
+		if(blocks[0][0]==oldLeft)
+			fail("Didn't swap!");
+		if(blocks[1][0]==oldRight)
+			fail("Didn't swap!");
+		for(int x = 0; x < 2; x++){
+			if(blocks[x][0].getState()==Block.State.SWAPPING)
+				fail("Why still swapping!");
+			if(blocks[x][0].getState()!=Block.State.NORMAL)
+				fail("Weird state!");
 		}
 	}
 	

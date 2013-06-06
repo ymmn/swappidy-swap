@@ -22,6 +22,9 @@ public class GameBoard {
 	public static float FALL_SPEED = 1;
 
 
+	public static int SWAP_SPEED = 1;
+
+
 	/**
 	 * Initialize the board for testing here
 	 * Otherwise leave uninitialized for randomized board
@@ -75,7 +78,6 @@ public class GameBoard {
 		}
 
 		detectCombos();
-
 	}
 
 	/**
@@ -137,7 +139,6 @@ public class GameBoard {
 					
 					// set the blocks to disappear 
 					for(int j = 0; j < gridPositionsOfBlocksInCombo.length; j++){
-						System.out.println("(" + gridPositionsOfBlocksInCombo[j].x + "," + gridPositionsOfBlocksInCombo[j].y + ")");
 						Point gridPos = gridPositionsOfBlocksInCombo[j]; 
 						blocks[gridPos.x][gridPos.y].setState(Block.State.DISAPPEARING);
 					}
@@ -308,6 +309,11 @@ public class GameBoard {
 	private Block[][] getBlocks(){
 		return blocks;
 	}
+	
+	@SuppressWarnings("unused")
+	private void moveCursorTo(Integer x, Integer y){
+		cursor.moveTo(x, y);
+	}
 
 	public void removeBlock(Vector2 gridpos) {
 		blocks[(int) gridpos.x][(int) gridpos.y] = null;
@@ -319,7 +325,17 @@ public class GameBoard {
 	}
 
 	public void attemptSwap() {
+		Point gridpos = cursor.getGridPosition();
+		blocks[gridpos.x][gridpos.y].setState(Block.State.SWAPPING);
+		blocks[gridpos.x][gridpos.y].setSwapDirection(1);
+		blocks[gridpos.x+1][gridpos.y].setState(Block.State.SWAPPING);
+		blocks[gridpos.x+1][gridpos.y].setSwapDirection(-1);
+	}
 
+	public void handleCompletedSwapping(int oldx, int oldy) {
+		Block temp = blocks[oldx][oldy];
+		blocks[oldx][oldy] = blocks[oldx+1][oldy];
+		blocks[oldx+1][oldy] = temp;
 	}
 
 
