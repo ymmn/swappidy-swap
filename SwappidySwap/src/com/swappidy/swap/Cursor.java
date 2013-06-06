@@ -8,10 +8,13 @@ import com.badlogic.gdx.math.Vector2;
 
 public class Cursor {
 
+	  private static final int CURSOR_DELAY = 100000000;
 	  private Vector2 position;
 	  private Vector2 DIMS;
 	  private Color myColor = Color.GRAY;
 	  private Point gridPos;
+	  private long lastMoved;
+	  
 	  
 	  public Cursor(Vector2 pos){
 		    position = pos;
@@ -32,6 +35,12 @@ public class Cursor {
 	  }
 	  
 	  void moveBy(int x, int y){
+		  long l = System.nanoTime();
+		  if(l - lastMoved > CURSOR_DELAY){
+			  lastMoved = l;
+		  } else{
+			  return;
+		  }
 		  if(gridPos.x==SwappidySwap.NUM_COL-2 && x>0) // at wall
 			  return;
 		  if(gridPos.x==0 && x<0)

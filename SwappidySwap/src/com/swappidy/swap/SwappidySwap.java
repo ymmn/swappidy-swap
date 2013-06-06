@@ -53,8 +53,6 @@ public class SwappidySwap extends Game {
 		Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
-
-
 		renderer.setProjectionMatrix(cam.combined);
 		gameboard.draw(renderer);
 		renderer.end();

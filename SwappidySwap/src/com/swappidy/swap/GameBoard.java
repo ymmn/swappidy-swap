@@ -20,16 +20,13 @@ import com.badlogic.gdx.math.Vector2;
 public class GameBoard {
 
 	public static float FALL_SPEED = 1;
-
-
 	public static int SWAP_SPEED = 1;
-
 
 	/**
 	 * Initialize the board for testing here
 	 * Otherwise leave uninitialized for randomized board
 	 */
-	Block blocks[][];// = LeDebugTools.createBoardAtState(LeDebugTools.simpleHorizCombo, this);
+	Block blocks[][];// = LeDebugTools.createBoardAtState(LeDebugTools.raiseStackTest1, this);
 	Random rng = new Random();
 	Cursor cursor;
 
@@ -42,7 +39,7 @@ public class GameBoard {
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
 				blocks[x][y] = new Block(
-						new Vector2(SwappidySwap.BLOCK_SIZE*x, SwappidySwap.BLOCK_SIZE*y),
+						new Point(x, y),
 						SwappidySwap.BLOCK_COLORS[ rng.nextInt(SwappidySwap.BLOCK_COLORS.length) ],
 						this);
 			}
@@ -61,6 +58,9 @@ public class GameBoard {
 	 * but does no action of its own
 	 */
 	public void updateBlockState(){
+		// ORDER MATTERS!
+		
+		
 		// find blank spaces which we are free to move into, and set all the blocks above those blanks to falling  
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
@@ -76,7 +76,7 @@ public class GameBoard {
 				}
 			}
 		}
-
+		
 		detectCombos();
 	}
 
@@ -269,6 +269,24 @@ public class GameBoard {
 	 * Adds in a new row of blocks at the bottom only if the top row is empty
 	 */
 	public void raiseStack(){
+		for(int y=SwappidySwap.NUM_ROW-1;y>=0;y--){
+			for(int x=0;x<SwappidySwap.NUM_COL;x++){
+				if(blocks[x][y]==null) continue;
+				if(y==SwappidySwap.NUM_ROW-1){
+					gameOver();
+					return;
+				}
+				blocks[x][y].moveGridPos(0,1);
+				blocks[x][y+1] = blocks[x][y];		
+			}
+		}
+		
+		for(int x=0; x < SwappidySwap.NUM_COL; x++){
+			blocks[x][0] = new Block(
+					new Point(x, 0),
+					SwappidySwap.BLOCK_COLORS[ rng.nextInt(SwappidySwap.BLOCK_COLORS.length) ],
+					this);
+		}
 		//		System.out.println("aihegpoewhgawie");
 		//		// if there are blocks at the top row, then don't do anything
 		//		for(int i = 0; i < SwappidySwap.NUM_COL; i++){
@@ -296,6 +314,10 @@ public class GameBoard {
 	}
 
 
+	private void gameOver() {
+		System.out.println("Game overrr!!!!");
+	}
+
 	/**
 	 * for testing
 	 * @param b
@@ -315,8 +337,8 @@ public class GameBoard {
 		cursor.moveTo(x, y);
 	}
 
-	public void removeBlock(Vector2 gridpos) {
-		blocks[(int) gridpos.x][(int) gridpos.y] = null;
+	public void removeBlock(Point gridpos) {
+		blocks[gridpos.x][gridpos.y] = null;
 	}
 
 	public void handleCompletedFalling(int oldx, int oldy) {
@@ -326,16 +348,30 @@ public class GameBoard {
 
 	public void attemptSwap() {
 		Point gridpos = cursor.getGridPosition();
-		blocks[gridpos.x][gridpos.y].setState(Block.State.SWAPPING);
-		blocks[gridpos.x][gridpos.y].setSwapDirection(1);
-		blocks[gridpos.x+1][gridpos.y].setState(Block.State.SWAPPING);
-		blocks[gridpos.x+1][gridpos.y].setSwapDirection(-1);
+		if((blocks[gridpos.x][gridpos.y]!=null 
+				&& blocks[gridpos.x][gridpos.y].getState()!=Block.State.NORMAL)
+			|| (blocks[gridpos.x+1][gridpos.y]!=null 
+					&& blocks[gridpos.x+1][gridpos.y].getState()!=Block.State.NORMAL))
+			return; // can't swap!
+		boolean swapRepExists = false;
+		if(blocks[gridpos.x][gridpos.y]!=null){
+			blocks[gridpos.x][gridpos.y].setState(Block.State.SWAPPING);
+			blocks[gridpos.x][gridpos.y].setSwapDirection(1);
+			blocks[gridpos.x][gridpos.y].setSwapRepresentative();
+			swapRepExists = true;
+		}
+		if(blocks[gridpos.x+1][gridpos.y]!=null){
+			blocks[gridpos.x+1][gridpos.y].setState(Block.State.SWAPPING);
+			blocks[gridpos.x+1][gridpos.y].setSwapDirection(-1);
+			if(!swapRepExists) blocks[gridpos.x+1][gridpos.y].setSwapRepresentative();
+		}
 	}
 
-	public void handleCompletedSwapping(int oldx, int oldy) {
-		Block temp = blocks[oldx][oldy];
-		blocks[oldx][oldy] = blocks[oldx+1][oldy];
-		blocks[oldx+1][oldy] = temp;
+	
+	public void handleCompletedSwapping(int leftx, int y) {
+		Block temp = blocks[leftx][y];
+		blocks[leftx][y] = blocks[leftx+1][y];
+		blocks[leftx+1][y] = temp;
 	}
 
 

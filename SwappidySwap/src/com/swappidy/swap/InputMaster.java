@@ -14,7 +14,7 @@ public class InputMaster {
 			cursor.moveBy(0, 1);
 		if(Gdx.input.isKeyPressed(Keys.DPAD_DOWN)) 
 			cursor.moveBy(0, -1);
-		if(Gdx.input.isKeyPressed(Keys.SPACE))
+		if(Gdx.input.isKeyPressed(Keys.X))
 			gameboard.raiseStack();
 		if(Gdx.input.isKeyPressed(Keys.Z))
 			gameboard.attemptSwap();

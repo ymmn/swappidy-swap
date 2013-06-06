@@ -97,6 +97,23 @@ public class SwappidyTest {
 		}
 	}
 	
+	@Test
+	public void testRaiseStack() {
+		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.raiseStackTest1,gboard) });
+		Block[][] blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
+		Block old = blocks[0][0];
+		gboard.raiseStack();
+		blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
+		if(blocks[0][1]==null)
+			fail("We don't have a block up here");
+		if(blocks[0][1]!=old)
+			fail("Block didnt' move up!");
+		if(blocks[0][0]==null)
+			fail("no new block!");
+		if(old.getPosition().y != SwappidySwap.BLOCK_SIZE)
+			fail("block didn't physically move");
+	}
+	
 	private Object callPrivateMethod(String name, Object[] params){
 		@SuppressWarnings("rawtypes")
 		Class[] parameterTypes = new Class[params.length];

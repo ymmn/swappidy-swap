@@ -1,5 +1,7 @@
 package com.swappidy.swap;
 
+import java.awt.Point;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -17,15 +19,17 @@ public class Block {
 	private Vector2 DIMS;
 	private Color myColor;
 	private int shrinkBy;
-	private Vector2 myGridPos;
+	private Point myGridPos;
 	private int swapDirection;
 	private GameBoard gameboard;
+	private boolean swapRep;
+	private int gap = 10;
 
-	Block(Vector2 pos, Color col, GameBoard gboard){
-		position = pos;
+	Block(Point pos, Color col, GameBoard gboard){
+		position = new Vector2(pos.x*SwappidySwap.BLOCK_SIZE, pos.y*SwappidySwap.BLOCK_SIZE);
 		myColor = col;
 		gameboard = gboard;
-		myGridPos = new Vector2(pos.x/SwappidySwap.BLOCK_SIZE, pos.y/SwappidySwap.BLOCK_SIZE);
+		myGridPos = pos;
 		DIMS = new Vector2(SwappidySwap.BLOCK_SIZE, SwappidySwap.BLOCK_SIZE);
 	}
 
@@ -71,9 +75,15 @@ public class Block {
 		int targetXPos = targetXGridPos*SwappidySwap.BLOCK_SIZE;
 		if( Math.abs(position.x - targetXPos) <= GameBoard.SWAP_SPEED ){
 			position.x = targetXPos;
-			if(swapDirection==1) // we only need one of the pair to notify the gameboard
-				gameboard.handleCompletedSwapping((int)myGridPos.x, (int)myGridPos.y);
+			if(swapRep){ // we only need one of the pair to notify the gameboard
+				if(swapDirection==1) // if we're the left block, send our pos
+					gameboard.handleCompletedSwapping(myGridPos.x, myGridPos.y);
+				else // we're the right block, so send left block's pos
+					gameboard.handleCompletedSwapping(myGridPos.x-1, myGridPos.y);
+			
+			}
 			myGridPos.x += swapDirection;
+			swapRep = false;
 
 			//remove this later
 			state = Block.State.NORMAL;
@@ -85,7 +95,7 @@ public class Block {
 
 	void draw(ShapeRenderer render){
 		render.setColor(myColor);
-		render.rect(position.x+shrinkBy/2, position.y+shrinkBy/2, DIMS.x-shrinkBy, DIMS.y-shrinkBy);
+		render.rect(position.x+gap+shrinkBy/2, position.y+gap+shrinkBy/2, DIMS.x-gap-shrinkBy, DIMS.y-gap-shrinkBy);
 	}
 
 	public void setState(State s){
@@ -114,6 +124,15 @@ public class Block {
 
 	public void setSwapDirection(int i) {
 		swapDirection = i;
+	}
+
+	public void moveGridPos(int i, int j) {
+		position.add(SwappidySwap.BLOCK_SIZE*i, SwappidySwap.BLOCK_SIZE*j);
+		myGridPos.move(i, j);
+	}
+
+	public void setSwapRepresentative() {
+		swapRep = true;
 	}
 	
 }
