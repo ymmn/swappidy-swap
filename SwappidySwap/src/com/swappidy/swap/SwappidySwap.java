@@ -17,6 +17,7 @@ public class SwappidySwap extends Game {
 	public static final int WORLD_WIDTH = 1000;
 	public static int NUM_ROW = 7;
 	public static int NUM_COL = 10;
+	public static boolean TICK_BY_TICK = true;
 
 	public static final Color[] BLOCK_COLORS = new Color[]{
 		new Color(0, 1, 0, 1), // green

@@ -32,7 +32,13 @@ public class LeDebugTools {
 		"r",
 		"r"
 	};
-	
+
+	public static String[] fiveCombo = new String[]{
+		"grg",
+		"rrr",
+		"grg"
+	};
+
 	public static String[] raiseStackTest1 = new String[]{
 		"",
 		"r"

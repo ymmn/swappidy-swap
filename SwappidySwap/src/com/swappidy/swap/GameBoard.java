@@ -22,13 +22,19 @@ public class GameBoard {
 	public static float FALL_SPEED = 1;
 	public static int SWAP_SPEED = 1;
 
+
+	public enum State{
+		STATIC, MOVING
+	}
+
 	/**
 	 * Initialize the board for testing here
 	 * Otherwise leave uninitialized for randomized board
 	 */
-	Block blocks[][];// = LeDebugTools.createBoardAtState(LeDebugTools.raiseStackTest1, this);
+	Block blocks[][];// = LeDebugTools.createBoardAtState(LeDebugTools.fiveCombo, this);
 	Random rng = new Random();
 	Cursor cursor;
+	private State boardState = State.STATIC;
 
 
 	/**
@@ -48,7 +54,6 @@ public class GameBoard {
 
 	public GameBoard(){
 		if(blocks==null) initBlocks();
-		// testShrinking(blocks);
 		cursor = new Cursor(new Vector2(1,1));
 	}
 
@@ -64,20 +69,27 @@ public class GameBoard {
 		// find blank spaces which we are free to move into, and set all the blocks above those blanks to falling  
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-				//			int curPos = i;
-
 				if(blocks[x][y]==null){  //find the ones that should be falling and set them as falling
 					int curY = y + 1;
 					while(curY < SwappidySwap.NUM_ROW && blocks[x][curY]!= null &&
-							blocks[x][curY].getState()==Block.State.NORMAL){
+							blocks[x][curY].isStable()){
 						blocks[x][curY].setState(Block.State.FALLING);
 						curY++;
 					}
 				}
+				
 			}
 		}
 		
 		detectCombos();
+		
+		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
+			for(int x=0;x<SwappidySwap.NUM_COL;x++){
+				if(blocks[x][y]!=null && blocks[x][y].getState()==Block.State.INITIAL)
+					blocks[x][y].setState(Block.State.NORMAL);
+			}
+		}
+
 	}
 
 	/**
@@ -94,12 +106,29 @@ public class GameBoard {
 	}
 
 	public void update(){
-		InputMaster.processKeyboardInput(this, cursor);
-		updateBlockState();
-		actionUpdate();
+		if(InputMaster.processKeyboardInput(this, cursor)){
+			updateBlockState();
+			actionUpdate();
+			updateBoardState();
+		}
 	}
 
 
+
+	private void updateBoardState() {
+		State newstate = State.STATIC;
+		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
+			for(int x=0;x<SwappidySwap.NUM_COL;x++){
+				if(blocks[x][y]!=null){
+					if(!blocks[x][y].isStable()){
+						newstate = State.MOVING;
+						break;
+					}
+				}
+			}
+		}
+		boardState = newstate;
+	}
 
 	public void draw(ShapeRenderer render){
 
@@ -124,25 +153,27 @@ public class GameBoard {
 		cursor.draw(render);
 	}
 
+	void checkForComboAtPos(int x, int y){
+		
+		
+		// set the blocks to disappear 
+
+	}
+	
 	void detectCombos(){
 
 		Point[] gridPositionsOfBlocksInCombo;
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-
 				if(blocks[x][y]==null) continue;
 
-				// only check blocks in a normal state (i.e. not falling or swapping)                        
-				if(blocks[x][y].getState()==Block.State.NORMAL){
-
+				// only check blocks in a normal or initial state (i.e. not falling or swapping)
+				if(blocks[x][y].isStable()){
 					gridPositionsOfBlocksInCombo = detectBlocksInCombo(x,y);
-					
-					// set the blocks to disappear 
 					for(int j = 0; j < gridPositionsOfBlocksInCombo.length; j++){
 						Point gridPos = gridPositionsOfBlocksInCombo[j]; 
 						blocks[gridPos.x][gridPos.y].setState(Block.State.DISAPPEARING);
 					}
-
 				}  
 			}
 		}
@@ -165,7 +196,7 @@ public class GameBoard {
 		int v = sameColorAsMe.get("south")+sameColorAsMe.get("north");
 		int numBlocksInHorizCombo =  h >= 2 ? h : 0;
 		int numBlocksInVertCombo  =  v >= 2 ? v : 0;
-
+		
 		// array of the indices of the blocks that are part of the combo
 		int comboLength = Math.max(0, numBlocksInVertCombo+numBlocksInHorizCombo);
 		if(comboLength>0) comboLength++; //remember to include myself
@@ -226,7 +257,7 @@ public class GameBoard {
 		curY = myY + 1;
 		while(curY < SwappidySwap.NUM_ROW && blocks[curX][curY]!=null
 				&& myColor==blocks[curX][curY].getColor() 
-				&& (blocks[curX][curY].getState()==Block.State.NORMAL) ){
+				&& (blocks[curX][curY].isStable() || blocks[curX][curY].getState()==Block.State.DISAPPEARING) ){
 			sameColorAsMe.put("north", sameColorAsMe.get("north") + 1);
 			curY++;
 		}
@@ -236,7 +267,7 @@ public class GameBoard {
 		curX = myX + 1;
 		while(curX < SwappidySwap.NUM_COL && blocks[curX][curY]!=null
 				&& myColor==blocks[curX][curY].getColor()
-				&& (blocks[curX][curY].getState()==Block.State.NORMAL) ){
+				&& (blocks[curX][curY].isStable() || blocks[curX][curY].getState()==Block.State.DISAPPEARING) ){
 			sameColorAsMe.put("east", sameColorAsMe.get("east") + 1);
 			curX++;
 		}
@@ -244,9 +275,9 @@ public class GameBoard {
 
 		// check below
 		curY = myY - 1;
-		while(curY > 0  && blocks[curX][curY]!=null
+		while(curY >= 0  && blocks[curX][curY]!=null
 				&& myColor==blocks[curX][curY].getColor() 
-				&& (blocks[curX][curY].getState()==Block.State.NORMAL) ){
+				&& (blocks[curX][curY].isStable() || blocks[curX][curY].getState()==Block.State.DISAPPEARING) ){
 			sameColorAsMe.put("south", sameColorAsMe.get("south") + 1);
 			curY--;
 		}
@@ -254,9 +285,9 @@ public class GameBoard {
 
 		// check to the left
 		curX = myX - 1;
-		while(curX > 0 && blocks[curX][curY]!=null
+		while(curX >= 0 && blocks[curX][curY]!=null
 				&& myColor==blocks[curX][curY].getColor()
-				&& (blocks[curX][curY].getState()==Block.State.NORMAL) ){
+				&& (blocks[curX][curY].isStable() || blocks[curX][curY].getState()==Block.State.DISAPPEARING) ){
 			sameColorAsMe.put("west", sameColorAsMe.get("west") + 1);
 			curX--;
 		}
@@ -269,6 +300,8 @@ public class GameBoard {
 	 * Adds in a new row of blocks at the bottom only if the top row is empty
 	 */
 	public void raiseStack(){
+		if(boardState!=State.STATIC) return;
+		
 		for(int y=SwappidySwap.NUM_ROW-1;y>=0;y--){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
 				if(blocks[x][y]==null) continue;
@@ -287,30 +320,6 @@ public class GameBoard {
 					SwappidySwap.BLOCK_COLORS[ rng.nextInt(SwappidySwap.BLOCK_COLORS.length) ],
 					this);
 		}
-		//		System.out.println("aihegpoewhgawie");
-		//		// if there are blocks at the top row, then don't do anything
-		//		for(int i = 0; i < SwappidySwap.NUM_COL; i++){
-		//			if(blocks[blocks.length - 1 - i]!=null){
-		//				//game.gameOver();
-		//				System.out.println("game overrr");
-		//				return; 
-		//			}
-		//		}
-		//
-		//		// move all blocks up    
-		//		for(int i = 0; i < (blocks.length-SwappidySwap.NUM_COL); i++){
-		//			if(blocks[i]!=null){
-		//				blocks[i].move(0,SwappidySwap.BLOCK_SIZE);
-		//				blocks[i+SwappidySwap.NUM_COL] = blocks[i];
-		//			} 
-		//		}
-		//
-		//		// insert a new line of blocks in the bottom
-		//		for(int i = 0; i < SwappidySwap.NUM_COL; i++)
-		//			blocks[i] = new Block(
-		//					getPositionFromBlockIndex(i), 
-		//					SwappidySwap.BLOCK_COLORS[rng.nextInt(SwappidySwap.BLOCK_COLORS.length)],
-		//					this, i);
 	}
 
 
@@ -344,14 +353,17 @@ public class GameBoard {
 	public void handleCompletedFalling(int oldx, int oldy) {
 		blocks[oldx][oldy-1] = blocks[oldx][oldy]; //occupy the spot below me
 		blocks[oldx][oldy] = null;
+		if(oldy-2 >= 0 && blocks[oldx][oldy-2]==null)
+			blocks[oldx][oldy-1].setState(Block.State.FALLING);
 	}
 
 	public void attemptSwap() {
 		Point gridpos = cursor.getGridPosition();
-		if((blocks[gridpos.x][gridpos.y]!=null 
-				&& blocks[gridpos.x][gridpos.y].getState()!=Block.State.NORMAL)
+		if(boardState ==State.MOVING||
+				(blocks[gridpos.x][gridpos.y]!=null 
+				&& !blocks[gridpos.x][gridpos.y].isStable())
 			|| (blocks[gridpos.x+1][gridpos.y]!=null 
-					&& blocks[gridpos.x+1][gridpos.y].getState()!=Block.State.NORMAL))
+					&& !blocks[gridpos.x+1][gridpos.y].isStable()))
 			return; // can't swap!
 		boolean swapRepExists = false;
 		if(blocks[gridpos.x][gridpos.y]!=null){

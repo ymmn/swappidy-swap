@@ -30,7 +30,7 @@ public class SwappidyTest {
 		gboard.updateBlockState();
 		Block[][] blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
 		for(int x = 0; x < 3; x++){
-			if(blocks[x][0].getState()!=Block.State.NORMAL)
+			if(!blocks[x][0].isStable())
 				fail("Blocks are falling when they shouldn't");
 			if(blocks[x][2].getState()!=Block.State.FALLING)
 				fail("Blocks aren't falling when they should");
@@ -96,7 +96,32 @@ public class SwappidyTest {
 				fail("Blocks are still occupying their previous slot");
 		}
 	}
-	
+		
+	@Test
+	public void testCombo() {
+		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.fiveCombo,gboard) });
+		gboard.updateBlockState();
+		Block[][] blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
+		if(blocks[0][0].getState()!=Block.State.NORMAL)
+			fail("block shoulda been normal");
+		if(blocks[0][2].getState()!=Block.State.NORMAL)
+			fail("block shoulda been normal");
+		if(blocks[2][0].getState()!=Block.State.NORMAL)
+			fail("block shoulda been normal");
+		if(blocks[2][2].getState()!=Block.State.NORMAL)
+			fail("block shoulda been normal");
+		if(blocks[0][1].getState()!=Block.State.DISAPPEARING)
+			fail("block shoulda been disappearing!");
+		if(blocks[1][1].getState()!=Block.State.DISAPPEARING)
+			fail("block shoulda been disappearing!");
+		if(blocks[1][0].getState()!=Block.State.DISAPPEARING)
+			fail("block shoulda been disappearing!");
+		if(blocks[1][2].getState()!=Block.State.DISAPPEARING)
+			fail("block shoulda been disappearing!");
+		if(blocks[2][1].getState()!=Block.State.DISAPPEARING)
+			fail("block shoulda been disappearing!");
+	}
+
 	@Test
 	public void testRaiseStack() {
 		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.raiseStackTest1,gboard) });

@@ -9,12 +9,12 @@ import com.badlogic.gdx.math.Vector2;
 public class Block {
 
 	public enum State{
-		NORMAL, DISAPPEARING, FALLING, SWAPPING
+		NORMAL, DISAPPEARING, FALLING, SWAPPING, INITIAL
 	}
 
 	private static final int SHRINK_SPEED = 1;
 
-	private State state = State.NORMAL;
+	private State state = State.INITIAL;
 	private Vector2 position;
 	private Vector2 DIMS;
 	private Color myColor;
@@ -133,6 +133,10 @@ public class Block {
 
 	public void setSwapRepresentative() {
 		swapRep = true;
+	}
+
+	public boolean isStable() {
+		return state==State.INITIAL || state==State.NORMAL;
 	}
 	
 }
