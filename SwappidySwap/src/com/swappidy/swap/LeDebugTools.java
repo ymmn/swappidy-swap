@@ -42,6 +42,11 @@ public class LeDebugTools {
 		"r"
 	};
 	
+	public static String[] occupationTest = new String[]{
+		"r ",
+		" g"
+	};
+	
 	public static Block[][] createBoardAtState(String[] board, GameBoard gboard){
 		SwappidySwap.NUM_COL = board[board.length-1].length();
 		SwappidySwap.NUM_ROW = board.length;
@@ -49,6 +54,8 @@ public class LeDebugTools {
 		for(int y = 0; y < board.length; y++){
 			for(int x = 0; x < board[y].length(); x++){
 				char c = board[y].charAt(x);
+				Block myblock = new Block(new Point(x, (board.length-1-y)),
+						0, gboard);
 				int col = -1;
 				if(c=='r')
 					col = 2;
@@ -56,10 +63,13 @@ public class LeDebugTools {
 					col = 1;
 				else if(c=='g')
 					col = 0;
+				else if(c==' ')
+					myblock = null;
 				
-				retval[x][board.length-1-y] = new Block(
-						new Point(x, (board.length-1-y)),
-						col, gboard);
+				if(myblock!=null)
+					myblock.setType(col);
+				
+				retval[x][board.length-1-y] = myblock;
 			}
 		}
 		return retval;

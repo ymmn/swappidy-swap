@@ -54,11 +54,11 @@ public class Block {
 	private void fallDown(){
 		// if finished falling a complete grid coordinate, I no longer occupy the spot
 		// I fell from
-		int targetYGridPos = (int) (myGridPos.y - 1);
+		int targetYGridPos = myGridPos.y - 1;
 		int targetYPos = targetYGridPos*SwappidySwap.BLOCK_SIZE.y;
 		if( position.y - targetYPos <= GameBoard.FALL_SPEED ){
 			position.y = targetYPos;
-			gameboard.handleCompletedFalling((int)myGridPos.x, (int)myGridPos.y);
+			gameboard.handleCompletedFalling(myGridPos.x, myGridPos.y);
 			myGridPos.y--;
 		}
 		else{ 
@@ -151,6 +151,10 @@ public class Block {
 	public void setGridPosition(int x, int y) {
 		myGridPos = new Point(x, y);
 		position = new Vector2(x*SwappidySwap.BLOCK_SIZE.x, y*SwappidySwap.BLOCK_SIZE.y);
+	}
+
+	public void setType(int col) {
+		type = col;
 	}
 	
 }

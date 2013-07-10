@@ -18,8 +18,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
  */
 public class GameBoard {
 
-	public static int FALL_SPEED = 10;
-	public static int SWAP_SPEED = 10;
+	public static int FALL_SPEED = 1;
+	public static int SWAP_SPEED = 1;
 	public static int SHRINK_SPEED = 10;
 
 
@@ -31,7 +31,8 @@ public class GameBoard {
 	 * Initialize the board for testing here
 	 * Otherwise leave uninitialized for randomized board
 	 */
-	Block blocks[][];// = LeDebugTools.createBoardAtState(LeDebugTools.fiveCombo, this);
+	Block blocks[][]; // = LeDebugTools.createBoardAtState(LeDebugTools.occupationTest, this);
+	boolean isOccupied[][];
 	Random rng = new Random();
 	Cursor cursor;
 	private State boardState = State.INITIAL;
@@ -42,6 +43,7 @@ public class GameBoard {
 	 */
 	private void initBlocks(){
 		blocks = new Block[SwappidySwap.NUM_COL][SwappidySwap.NUM_ROW];
+		isOccupied = new boolean[SwappidySwap.NUM_COL][SwappidySwap.NUM_ROW];
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
 				blocks[x][y] = new Block(
@@ -57,12 +59,13 @@ public class GameBoard {
 		cursor = new Cursor(new Point(0,0));
 	}
 
-	private void checkForFalling(int x, int y){
-		if(blocks[x][y]==null){  //find the ones that should be falling and set them as falling
+	private void checkForFalling(Integer x, Integer y){
+		if(blocks[x][y]==null || blocks[x][y].getState()==Block.State.FALLING){  //find the ones that should be falling and set them as falling
 			int curY = y + 1;
 			while(curY < SwappidySwap.NUM_ROW && blocks[x][curY]!= null &&
 					blocks[x][curY].isStable()){
 				blocks[x][curY].setState(Block.State.FALLING);
+				isOccupied[x][curY-1] = true;
 				boardState = State.MOVING;
 				curY++;
 			}
@@ -335,6 +338,7 @@ public class GameBoard {
 	@SuppressWarnings("unused")
 	private void setBlocks(Block[][] b){
 		blocks = b;
+		isOccupied = new boolean[b.length][b[0].length];
 	}
 
 	@SuppressWarnings("unused")
@@ -355,10 +359,12 @@ public class GameBoard {
 
 	public void handleCompletedFalling(int oldx, int oldy) {
 		blocks[oldx][oldy-1] = blocks[oldx][oldy]; //occupy the spot below me
+		isOccupied[oldx][oldy-1] = false;
 		blocks[oldx][oldy] = null;
-		if(oldy-2 >= 0 && (blocks[oldx][oldy-2]==null || blocks[oldx][oldy-2].getState()==Block.State.FALLING))
+		if(oldy-2 >= 0 && (blocks[oldx][oldy-2]==null || blocks[oldx][oldy-2].getState()==Block.State.FALLING)){
 			blocks[oldx][oldy-1].setState(Block.State.FALLING);
-		else{
+			isOccupied[oldx][oldy-2] = true;
+		}else{
 			blocks[oldx][oldy-1].setState(Block.State.NORMAL);
 			checkForCombosAtBlock(oldx, oldy-1);
 			updateBoardState();
@@ -372,6 +378,7 @@ public class GameBoard {
 		if(temp!=null){
 			temp.setState(Block.State.NORMAL);
 			temp.setGridPosition(leftx+1, y);
+			isOccupied[leftx+1][y] = false;
 			if(y>0) checkForFalling(leftx+1, y-1);
 			checkForCombosAtBlock(leftx+1, y);
 		} else {
@@ -380,6 +387,7 @@ public class GameBoard {
 		if(blocks[leftx][y]!=null){
 			blocks[leftx][y].setState(Block.State.NORMAL);
 			blocks[leftx][y].setGridPosition(leftx, y);
+			isOccupied[leftx][y] = false;
 			if(y>0) checkForFalling(leftx, y-1);
 			checkForCombosAtBlock(leftx, y);
 		} else {
@@ -393,18 +401,21 @@ public class GameBoard {
 		if((blocks[gridpos.x][gridpos.y]!=null 
 				&& !blocks[gridpos.x][gridpos.y].isStable())
 			|| (blocks[gridpos.x+1][gridpos.y]!=null 
-					&& !blocks[gridpos.x+1][gridpos.y].isStable()))
+					&& !blocks[gridpos.x+1][gridpos.y].isStable())
+			|| isOccupied[gridpos.x][gridpos.y] || isOccupied[gridpos.x+1][gridpos.y])
 			return; // can't swap!
 		boolean swapRepExists = false;
 		if(blocks[gridpos.x][gridpos.y]!=null){
 			blocks[gridpos.x][gridpos.y].setState(Block.State.SWAPPING);
 			blocks[gridpos.x][gridpos.y].setSwapDirection(1);
 			blocks[gridpos.x][gridpos.y].setSwapRepresentative();
+			isOccupied[gridpos.x+1][gridpos.y] = true;
 			swapRepExists = true;
 		}
 		if(blocks[gridpos.x+1][gridpos.y]!=null){
 			blocks[gridpos.x+1][gridpos.y].setState(Block.State.SWAPPING);
 			blocks[gridpos.x+1][gridpos.y].setSwapDirection(-1);
+			isOccupied[gridpos.x][gridpos.y] = true;
 			if(!swapRepExists) blocks[gridpos.x+1][gridpos.y].setSwapRepresentative();
 		}
 	}

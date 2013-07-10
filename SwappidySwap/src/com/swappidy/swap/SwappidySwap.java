@@ -21,7 +21,7 @@ public class SwappidySwap extends Game {
 	public static final Point BOARD_DIM = new Point(NUM_COL*100, NUM_ROW*90);
 	public static Point BLOCK_SIZE = new Point(BOARD_DIM.x/NUM_COL, BOARD_DIM.y/NUM_ROW);
 	public static Point BOARD_POS = new Point(0, 0);
-	public static boolean TICK_BY_TICK = true;
+	public static boolean TICK_BY_TICK = false;
 	public static final boolean DEBUG_COLORS = true;
 	public static boolean TESTING = false;
 

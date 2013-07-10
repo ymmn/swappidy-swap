@@ -141,6 +141,16 @@ public class SwappidyTest {
 			fail("block didn't physically move");
 	}
 	
+	@Test
+	public void testOccupation() {
+		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.occupationTest,gboard) });
+		Block[][] blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
+		callPrivateMethod("checkForFalling", new Object[]{ 0, 0 });
+		gboard.attemptSwap();
+		if(blocks[1][0].getState() == Block.State.SWAPPING)
+			fail("Trying to swap into falling block");
+	}
+	
 	private Object callPrivateMethod(String name, Object[] params){
 		@SuppressWarnings("rawtypes")
 		Class[] parameterTypes = new Class[params.length];
