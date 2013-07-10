@@ -2,6 +2,7 @@ package com.swappidy.swap.test;
 
 import static org.junit.Assert.*;
 
+import java.awt.Point;
 import java.lang.reflect.Method;
 
 import org.junit.Before;
@@ -21,13 +22,14 @@ public class SwappidyTest {
 		gboard = new GameBoard();
 		GameBoard.FALL_SPEED = 1;
 		GameBoard.SWAP_SPEED = 1;
-		SwappidySwap.BLOCK_SIZE = 100;
+		SwappidySwap.BLOCK_SIZE = new Point(100,100);
+		SwappidySwap.TESTING = true;
 	}
 
 	@Test
 	public void testFallingBlockState() {
 		callPrivateMethod("setBlocks", new Object[]{ LeDebugTools.createBoardAtState(LeDebugTools.fallingTest,gboard) });
-		gboard.updateBlockState();
+		gboard.update();
 		Block[][] blocks = (Block[][])callPrivateMethod("getBlocks", new Object[0]);
 		for(int x = 0; x < 3; x++){
 			if(!blocks[x][0].isStable())
@@ -135,7 +137,7 @@ public class SwappidyTest {
 			fail("Block didnt' move up!");
 		if(blocks[0][0]==null)
 			fail("no new block!");
-		if(old.getPosition().y != SwappidySwap.BLOCK_SIZE)
+		if(old.getPosition().y != SwappidySwap.BLOCK_SIZE.y)
 			fail("block didn't physically move");
 	}
 	

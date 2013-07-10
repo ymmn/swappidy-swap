@@ -2,8 +2,6 @@ package com.swappidy.swap;
 
 import java.awt.Point;
 
-import com.badlogic.gdx.graphics.Color;
-
 public class LeDebugTools {
 	
 	public static String[] twoX2 = new String[]{
@@ -51,13 +49,13 @@ public class LeDebugTools {
 		for(int y = 0; y < board.length; y++){
 			for(int x = 0; x < board[y].length(); x++){
 				char c = board[y].charAt(x);
-				Color col = null;
+				int col = -1;
 				if(c=='r')
-					col = Color.RED;
+					col = 2;
 				else if(c=='b')
-					col = Color.BLUE;
+					col = 1;
 				else if(c=='g')
-					col = Color.GREEN;
+					col = 0;
 				
 				retval[x][board.length-1-y] = new Block(
 						new Point(x, (board.length-1-y)),

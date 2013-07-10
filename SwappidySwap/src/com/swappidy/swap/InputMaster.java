@@ -6,6 +6,7 @@ import com.badlogic.gdx.Input.Keys;
 public class InputMaster {
 	
 	public static boolean processKeyboardInput(GameBoard gameboard, Cursor cursor){
+		if(SwappidySwap.TESTING) return true;
 		if(Gdx.input.isKeyPressed(Keys.DPAD_LEFT)) 
 			cursor.moveBy(-1, 0);
 		if(Gdx.input.isKeyPressed(Keys.DPAD_RIGHT)) 

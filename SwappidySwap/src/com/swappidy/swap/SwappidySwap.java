@@ -1,5 +1,7 @@
 package com.swappidy.swap;
 
+import java.awt.Point;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
@@ -12,12 +14,16 @@ import com.badlogic.gdx.Game;
 
 public class SwappidySwap extends Game {
 
-	public static int BLOCK_SIZE = 100;
-	public static final int WORLD_HEIGHT = 700;
-	public static final int WORLD_WIDTH = 1000;
+
 	public static int NUM_ROW = 7;
 	public static int NUM_COL = 10;
+	public static final Point WORLD_DIM = new Point(NUM_COL*100, NUM_ROW*100);
+	public static final Point BOARD_DIM = new Point(NUM_COL*100, NUM_ROW*90);
+	public static Point BLOCK_SIZE = new Point(BOARD_DIM.x/NUM_COL, BOARD_DIM.y/NUM_ROW);
+	public static Point BOARD_POS = new Point(0, 0);
 	public static boolean TICK_BY_TICK = true;
+	public static final boolean DEBUG_COLORS = true;
+	public static boolean TESTING = false;
 
 	public static final Color[] BLOCK_COLORS = new Color[]{
 		new Color(0, 1, 0, 1), // green
@@ -40,8 +46,9 @@ public class SwappidySwap extends Game {
 		screenWidth = Gdx.graphics.getWidth();
 		screenHeight = Gdx.graphics.getHeight();
 		renderer = new ShapeRenderer();
-		this.cam = new OrthographicCamera(WORLD_WIDTH, WORLD_HEIGHT);
-		this.cam.position.set(WORLD_WIDTH/2, WORLD_HEIGHT/2, 0);
+		this.cam = new OrthographicCamera(WORLD_DIM.x, WORLD_DIM.y);
+		this.cam.position.set(WORLD_DIM.x/2, WORLD_DIM.y/2, 0);
+		 font = new BitmapFont();
 
 		this.cam.update();
 		gameboard = new GameBoard();
@@ -53,10 +60,13 @@ public class SwappidySwap extends Game {
 		update();
 		Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-
+		
+//		spriteBatch.begin();
+//		font.draw(spriteBatch, "my-string", 200, 200);
+//		spriteBatch.end();
+		
 		renderer.setProjectionMatrix(cam.combined);
 		gameboard.draw(renderer);
-		renderer.end();
 	}
 
 	void update(){
