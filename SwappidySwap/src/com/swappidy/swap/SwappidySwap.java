@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.Game;
 
@@ -32,8 +33,8 @@ public class SwappidySwap extends Game {
 		new Color(1, 1, 0, 1), // purple
 	};
 
-	SpriteBatch spriteBatch;
-	BitmapFont font;
+	public static SpriteBatch spriteBatch;
+	static BitmapFont font;
 	int screenWidth, screenHeight;
 	private OrthographicCamera cam;
 	private GameBoard gameboard;
@@ -48,10 +49,12 @@ public class SwappidySwap extends Game {
 		renderer = new ShapeRenderer();
 		this.cam = new OrthographicCamera(WORLD_DIM.x, WORLD_DIM.y);
 		this.cam.position.set(WORLD_DIM.x/2, WORLD_DIM.y/2, 0);
-		 font = new BitmapFont();
 
 		this.cam.update();
+		
 		gameboard = new GameBoard();
+//		font = new BitmapFont(Gdx.files.internal("data/digib.fnt"),
+//                Gdx.files.internal("data/digib.png"), false);
 	}
 
 
@@ -61,12 +64,13 @@ public class SwappidySwap extends Game {
 		Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		
-//		spriteBatch.begin();
-//		font.draw(spriteBatch, "my-string", 200, 200);
-//		spriteBatch.end();
-		
 		renderer.setProjectionMatrix(cam.combined);
+		spriteBatch.begin();
 		gameboard.draw(renderer);
+		
+
+		font.draw(spriteBatch, "my-string", 50, WORLD_DIM.y - 0);
+		spriteBatch.end();
 	}
 
 	void update(){

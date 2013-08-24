@@ -20,7 +20,7 @@ public class GameBoard {
 
 	public static int FALL_SPEED = 1;
 	public static int SWAP_SPEED = 1;
-	public static int SHRINK_SPEED = 10;
+	public static int SHRINK_SPEED = 3;
 
 
 	public enum State{
@@ -60,11 +60,19 @@ public class GameBoard {
 	}
 
 	private void checkForFalling(Integer x, Integer y){
+		checkForFalling(x, y, 0);
+	}
+	
+	private void checkForFalling(Integer x, Integer y, int chainLength){
 		if(blocks[x][y]==null || blocks[x][y].getState()==Block.State.FALLING){  //find the ones that should be falling and set them as falling
 			int curY = y + 1;
 			while(curY < SwappidySwap.NUM_ROW && blocks[x][curY]!= null &&
 					blocks[x][curY].isStable()){
 				blocks[x][curY].setState(Block.State.FALLING);
+				if(chainLength > 0){
+					blocks[x][curY].setSubState(Block.SubState.CHAINER);
+					blocks[x][curY].setChainLength(chainLength);
+				}
 				isOccupied[x][curY-1] = true;
 				boardState = State.MOVING;
 				curY++;
@@ -147,7 +155,7 @@ public class GameBoard {
 		/* draw blocks */
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-				if(blocks[x][y]!=null) blocks[x][y].draw(render); 
+				if(blocks[x][y]!=null) blocks[x][y].draw(render, x, y); 
 			}
 		}
 		render.end();
@@ -174,14 +182,16 @@ public class GameBoard {
 
 
 	
-	private void checkForCombosAtBlock(int x, int y){
-		if(!blocks[x][y].isStable()) return;
+	private boolean checkForCombosAtBlock(int x, int y){
+		if(!blocks[x][y].isStable()) return false;
 		Point[] gridPositionsOfBlocksInCombo = detectBlocksInCombo(x,y);
 		for(int j = 0; j < gridPositionsOfBlocksInCombo.length; j++){
 			Point gridPos = gridPositionsOfBlocksInCombo[j]; 
 			blocks[gridPos.x][gridPos.y].setState(Block.State.DISAPPEARING);
+			blocks[gridPos.x][gridPos.y].setComboLength(gridPositionsOfBlocksInCombo.length);
 			boardState = State.MOVING;
 		}
+		return gridPositionsOfBlocksInCombo.length > 0;
 	}
 
 
@@ -352,8 +362,9 @@ public class GameBoard {
 	}
 
 	public void handleCompletedShrinking(Point gridpos) {
+		int chainLength = blocks[gridpos.x][gridpos.y].getChainLength();
 		blocks[gridpos.x][gridpos.y] = null;
-		checkForFalling(gridpos.x, gridpos.y);
+		checkForFalling(gridpos.x, gridpos.y, chainLength + 1);
 		updateBoardState();
 	}
 
@@ -366,7 +377,10 @@ public class GameBoard {
 			isOccupied[oldx][oldy-2] = true;
 		}else{
 			blocks[oldx][oldy-1].setState(Block.State.NORMAL);
-			checkForCombosAtBlock(oldx, oldy-1);
+			if(!checkForCombosAtBlock(oldx, oldy-1)){
+				blocks[oldx][oldy-1].setSubState(Block.SubState.NORMAL);
+				blocks[oldx][oldy-1].setChainLength(0);
+			}
 			updateBoardState();
 		}
 	}

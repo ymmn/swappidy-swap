@@ -5,6 +5,7 @@ import java.awt.Point;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.swappidy.swap.Block.SubState;
 
 public class Block {
 
@@ -12,18 +13,24 @@ public class Block {
 		NORMAL, DISAPPEARING, FALLING, SWAPPING
 	}
 
+	public enum SubState {
+		CHAINER, NORMAL
+	}
 
 	private State state = State.NORMAL;
+	private SubState substate;
 	private Vector2 position;
 	private Vector2 DIMS;
 	private int shrinkBy;
 	private Point myGridPos;
 	private int swapDirection;
+	private int chainLength = 0;
 	private Color myColor;
 	private GameBoard gameboard;
 	private boolean swapRep;
-	private int gap = 0;
+	private int gap = 10;
 	private int type;
+	private int comboLength;
 
 	Block(Point pos, int type, GameBoard gboard){
 		position = new Vector2(pos.x*SwappidySwap.BLOCK_SIZE.x, pos.y*SwappidySwap.BLOCK_SIZE.y);
@@ -41,7 +48,7 @@ public class Block {
 		}
 		gameboard.handleCompletedShrinking(myGridPos);
 	}
-	
+
 	public void update(){
 		if(state==State.DISAPPEARING)
 			shrink();
@@ -50,7 +57,7 @@ public class Block {
 		if(state==State.SWAPPING)
 			swap();
 	}
-	
+
 	private void fallDown(){
 		// if finished falling a complete grid coordinate, I no longer occupy the spot
 		// I fell from
@@ -65,7 +72,7 @@ public class Block {
 			position.y += -1*GameBoard.FALL_SPEED;
 		}
 	}
-	
+
 	private void swap(){
 		// if finished falling a complete grid coordinate, I no longer occupy the spot
 		// I fell from
@@ -77,7 +84,7 @@ public class Block {
 					gameboard.handleCompletedSwapping(myGridPos.x, myGridPos.y);
 				else // we're the right block, so send left block's pos
 					gameboard.handleCompletedSwapping(myGridPos.x-1, myGridPos.y);
-			
+
 			}
 			swapRep = false;
 		}
@@ -86,9 +93,28 @@ public class Block {
 		}
 	}
 
-	void draw(ShapeRenderer render){
+	void draw(ShapeRenderer render, int xIndex, int yIndex){
 		render.setColor(getColor());
 		render.rect(SwappidySwap.BOARD_POS.x + position.x+gap+shrinkBy/2, SwappidySwap.BOARD_POS.y + position.y+gap+shrinkBy/2, DIMS.x-gap-shrinkBy, DIMS.y-gap-shrinkBy);
+		String txt = getDrawingText(xIndex, yIndex);
+		if(txt.length() > 0){
+			SwappidySwap.font.draw(SwappidySwap.spriteBatch, txt, position.x+(DIMS.x/2), position.y+(DIMS.y/2));
+		}
+
+	}
+
+	private String getDrawingText(int x, int y) {
+		String s = "";
+		if(state==State.DISAPPEARING){
+			if(comboLength > 4)
+				s = "CMBO" + comboLength;
+			if(substate==SubState.CHAINER)
+				s = "CHAIN" + chainLength;
+		}
+		if(SwappidySwap.DEBUG_COLORS)
+			s = "(" + myGridPos.x + ", " + myGridPos.y + ")";
+			//s = "DBG" + chainLength;
+		return s;
 	}
 
 	public void setState(State s){
@@ -102,7 +128,7 @@ public class Block {
 	public State getState(){
 		return state;
 	}
-	
+
 	public Vector2 getPosition(){
 		return position;
 	}
@@ -114,7 +140,7 @@ public class Block {
 	public int getType(){
 		return type;
 	}
-	
+
 	private Color getColor() {
 		if(SwappidySwap.DEBUG_COLORS){
 			switch(state){
@@ -136,8 +162,8 @@ public class Block {
 	}
 
 	public void moveGridPos(int i, int j) {
-		position.add(SwappidySwap.BLOCK_SIZE.x*i, SwappidySwap.BLOCK_SIZE.y*j);
-		myGridPos.move(i, j);
+		position = position.add(SwappidySwap.BLOCK_SIZE.x*i, SwappidySwap.BLOCK_SIZE.y*j);
+		myGridPos.move(myGridPos.x + i, myGridPos.y + j);
 	}
 
 	public void setSwapRepresentative() {
@@ -156,5 +182,21 @@ public class Block {
 	public void setType(int col) {
 		type = col;
 	}
-	
+
+	public void setComboLength(int length) {
+		comboLength = length;
+	}
+
+	public void setSubState(SubState ss) {
+		substate = ss;
+	}
+
+	public void setChainLength(int l){
+		chainLength = l;
+	}
+
+	public int getChainLength() {
+		return chainLength;
+	}
+
 }
