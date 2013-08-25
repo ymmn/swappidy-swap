@@ -31,7 +31,7 @@ public class GameBoard {
 	 * Initialize the board for testing here
 	 * Otherwise leave uninitialized for randomized board
 	 */
-	Block blocks[][]; // = LeDebugTools.createBoardAtState(LeDebugTools.occupationTest, this);
+	BlockGrid blockGrid; // = LeDebugTools.createBoardAtState(LeDebugTools.occupationTest, this);
 	boolean isOccupied[][];
 	Random rng = new Random();
 	Cursor cursor;
@@ -42,20 +42,13 @@ public class GameBoard {
 	 * random initiation of blocks. Fills entire screen.
 	 */
 	private void initBlocks(){
-		blocks = new Block[SwappidySwap.NUM_COL][SwappidySwap.NUM_ROW];
+		blockGrid = new BlockGrid(SwappidySwap.NUM_COL, SwappidySwap.NUM_ROW);
 		isOccupied = new boolean[SwappidySwap.NUM_COL][SwappidySwap.NUM_ROW];
-		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
-			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-				blocks[x][y] = new Block(
-						new Point(x, y),
-						rng.nextInt(SwappidySwap.BLOCK_COLORS.length),
-						this);
-			}
-		}
+		blockGrid.randomInitialize(rng, this);
 	}
 
 	public GameBoard(){
-		if(blocks==null) initBlocks();
+		if(blockGrid==null) initBlocks();
 		cursor = new Cursor(new Point(0,0));
 	}
 
@@ -64,18 +57,24 @@ public class GameBoard {
 	}
 	
 	private void checkForFalling(Integer x, Integer y, int chainLength){
-		if(blocks[x][y]==null || blocks[x][y].getState()==Block.State.FALLING){  //find the ones that should be falling and set them as falling
+		if(blockGrid.getBlock(x,y)==null || blockGrid.getBlock(x,y).getState()==Block.State.FALLING){  //find the ones that should be falling and set them as falling
 			int curY = y + 1;
-			while(curY < SwappidySwap.NUM_ROW && blocks[x][curY]!= null &&
-					blocks[x][curY].isStable()){
-				blocks[x][curY].setState(Block.State.FALLING);
+			Block curBlock = null;
+			if(curY < SwappidySwap.NUM_ROW){
+				curBlock = blockGrid.getBlock(x, curY);
+			}
+			while(curBlock!= null && curBlock.isStable()){
+				curBlock.setState(Block.State.FALLING);
 				if(chainLength > 0){
-					blocks[x][curY].setSubState(Block.SubState.CHAINER);
-					blocks[x][curY].setChainLength(chainLength);
+					curBlock.setSubState(Block.SubState.CHAINER);
+					curBlock.setChainLength(chainLength);
 				}
 				isOccupied[x][curY-1] = true;
 				boardState = State.MOVING;
 				curY++;
+				if(curY >= SwappidySwap.NUM_ROW)
+					break;
+				curBlock = blockGrid.getBlock(x, curY);
 			}
 		}
 	}
@@ -98,10 +97,10 @@ public class GameBoard {
 		
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-				if(blocks[x][y]==null) continue;
+				if(blockGrid.getBlock(x, y)==null) continue;
 
 				// only check blocks in a normal or initial state (i.e. not falling or swapping)
-				if(blocks[x][y].isStable()){
+				if(blockGrid.getBlock(x, y).isStable()){
 					checkForCombosAtBlock(x,y);
 				}  
 			}
@@ -117,7 +116,7 @@ public class GameBoard {
 		/* let disappearing blocks disappear */
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-				if(blocks[x][y]!=null) blocks[x][y].update();
+				if(blockGrid.getBlock(x, y)!=null) blockGrid.getBlock(x, y).update();
 			}
 		}
 	}
@@ -135,8 +134,8 @@ public class GameBoard {
 		State newstate = State.STATIC;
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-				if(blocks[x][y]!=null){
-					if(!blocks[x][y].isStable()){
+				if(blockGrid.getBlock(x, y)!=null){
+					if(!blockGrid.getBlock(x, y).isStable()){
 						newstate = State.MOVING;
 						break;
 					}
@@ -155,7 +154,7 @@ public class GameBoard {
 		/* draw blocks */
 		for(int y=0;y<SwappidySwap.NUM_ROW;y++){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-				if(blocks[x][y]!=null) blocks[x][y].draw(render, x, y); 
+				if(blockGrid.getBlock(x, y)!=null) blockGrid.getBlock(x, y).draw(render, x, y); 
 			}
 		}
 		render.end();
@@ -183,12 +182,13 @@ public class GameBoard {
 
 	
 	private boolean checkForCombosAtBlock(int x, int y){
-		if(!blocks[x][y].isStable()) return false;
+		if(!blockGrid.getBlock(x, y).isStable()) return false;
 		Point[] gridPositionsOfBlocksInCombo = detectBlocksInCombo(x,y);
 		for(int j = 0; j < gridPositionsOfBlocksInCombo.length; j++){
-			Point gridPos = gridPositionsOfBlocksInCombo[j]; 
-			blocks[gridPos.x][gridPos.y].setState(Block.State.DISAPPEARING);
-			blocks[gridPos.x][gridPos.y].setComboLength(gridPositionsOfBlocksInCombo.length);
+			Point gridPos = gridPositionsOfBlocksInCombo[j];
+			Block b = blockGrid.getBlock(gridPos.x, gridPos.y);
+			b.setState(Block.State.DISAPPEARING);
+			b.setComboLength(gridPositionsOfBlocksInCombo.length);
 			boardState = State.MOVING;
 		}
 		return gridPositionsOfBlocksInCombo.length > 0;
@@ -256,7 +256,7 @@ public class GameBoard {
 		sameColorAsMe.put("west", 0);
 		sameColorAsMe.put("east", 0);
 
-		int myType = blocks[myX][myY].getType();
+		int myType = blockGrid.getBlock(myX, myY).getType();
 		int curY = myY;
 		int curX = myX;
 
@@ -269,9 +269,9 @@ public class GameBoard {
 		 */
 		// check up
 		curY = myY + 1;
-		while(curY < SwappidySwap.NUM_ROW && blocks[curX][curY]!=null
-				&& myType==blocks[curX][curY].getType() 
-				&& (blocks[curX][curY].isStable() || blocks[curX][curY].getState()==Block.State.DISAPPEARING) ){
+		while(curY < SwappidySwap.NUM_ROW && blockGrid.getBlock(curX, curY)!=null
+				&& myType==blockGrid.getBlock(curX, curY).getType() 
+				&& (blockGrid.getBlock(curX, curY).isStable() || blockGrid.getBlock(curX, curY).getState()==Block.State.DISAPPEARING) ){
 			sameColorAsMe.put("north", sameColorAsMe.get("north") + 1);
 			curY++;
 		}
@@ -279,9 +279,9 @@ public class GameBoard {
 
 		// check to the right
 		curX = myX + 1;
-		while(curX < SwappidySwap.NUM_COL && blocks[curX][curY]!=null
-				&& myType==blocks[curX][curY].getType()
-				&& (blocks[curX][curY].isStable() || blocks[curX][curY].getState()==Block.State.DISAPPEARING) ){
+		while(curX < SwappidySwap.NUM_COL && blockGrid.getBlock(curX, curY)!=null
+				&& myType==blockGrid.getBlock(curX, curY).getType()
+				&& (blockGrid.getBlock(curX, curY).isStable() || blockGrid.getBlock(curX, curY).getState()==Block.State.DISAPPEARING) ){
 			sameColorAsMe.put("east", sameColorAsMe.get("east") + 1);
 			curX++;
 		}
@@ -289,9 +289,9 @@ public class GameBoard {
 
 		// check below
 		curY = myY - 1;
-		while(curY >= 0  && blocks[curX][curY]!=null
-				&& myType==blocks[curX][curY].getType() 
-				&& (blocks[curX][curY].isStable() || blocks[curX][curY].getState()==Block.State.DISAPPEARING) ){
+		while(curY >= 0  && blockGrid.getBlock(curX, curY)!=null
+				&& myType==blockGrid.getBlock(curX, curY).getType() 
+				&& (blockGrid.getBlock(curX, curY).isStable() || blockGrid.getBlock(curX, curY).getState()==Block.State.DISAPPEARING) ){
 			sameColorAsMe.put("south", sameColorAsMe.get("south") + 1);
 			curY--;
 		}
@@ -299,9 +299,9 @@ public class GameBoard {
 
 		// check to the left
 		curX = myX - 1;
-		while(curX >= 0 && blocks[curX][curY]!=null
-				&& myType==blocks[curX][curY].getType()
-				&& (blocks[curX][curY].isStable() || blocks[curX][curY].getState()==Block.State.DISAPPEARING) ){
+		while(curX >= 0 && blockGrid.getBlock(curX, curY)!=null
+				&& myType==blockGrid.getBlock(curX, curY).getType()
+				&& (blockGrid.getBlock(curX, curY).isStable() || blockGrid.getBlock(curX, curY).getState()==Block.State.DISAPPEARING) ){
 			sameColorAsMe.put("west", sameColorAsMe.get("west") + 1);
 			curX--;
 		}
@@ -318,21 +318,20 @@ public class GameBoard {
 		
 		for(int y=SwappidySwap.NUM_ROW-1;y>=0;y--){
 			for(int x=0;x<SwappidySwap.NUM_COL;x++){
-				if(blocks[x][y]==null) continue;
+				if(blockGrid.getBlock(x, y)==null) continue;
 				if(y==SwappidySwap.NUM_ROW-1){
 					gameOver();
 					return;
 				}
-				blocks[x][y].moveGridPos(0,1);
-				blocks[x][y+1] = blocks[x][y];		
+				blockGrid.moveBlockUp(x, y);	
 			}
 		}
 		
 		for(int x=0; x < SwappidySwap.NUM_COL; x++){
-			blocks[x][0] = new Block(
+			blockGrid.setBlock(x, 0, new Block(
 					new Point(x, 0),
 					rng.nextInt(SwappidySwap.BLOCK_COLORS.length),
-					this);
+					this));
 		}
 	}
 
@@ -347,13 +346,13 @@ public class GameBoard {
 	 */
 	@SuppressWarnings("unused")
 	private void setBlocks(Block[][] b){
-		blocks = b;
+		blockGrid.setBlocks(b);
 		isOccupied = new boolean[b.length][b[0].length];
 	}
 
 	@SuppressWarnings("unused")
 	private Block[][] getBlocks(){
-		return blocks;
+		return blockGrid.getBlocksArray();
 	}
 	
 	@SuppressWarnings("unused")
@@ -362,33 +361,34 @@ public class GameBoard {
 	}
 
 	public void handleCompletedShrinking(Point gridpos) {
-		int chainLength = blocks[gridpos.x][gridpos.y].getChainLength();
-		blocks[gridpos.x][gridpos.y] = null;
+		int chainLength = blockGrid.getBlock(gridpos.x, gridpos.y).getChainLength();
+		blockGrid.setBlock(gridpos.x, gridpos.y, null);
 		checkForFalling(gridpos.x, gridpos.y, chainLength + 1);
 		updateBoardState();
 	}
 
 	public void handleCompletedFalling(int oldx, int oldy) {
-		blocks[oldx][oldy-1] = blocks[oldx][oldy]; //occupy the spot below me
+		Block fallenBlock = blockGrid.getBlock(oldx, oldy);
+		blockGrid.moveBlockDown(oldx, oldy); //occupy the spot below me
 		isOccupied[oldx][oldy-1] = false;
-		blocks[oldx][oldy] = null;
-		if(oldy-2 >= 0 && (blocks[oldx][oldy-2]==null || blocks[oldx][oldy-2].getState()==Block.State.FALLING)){
-			blocks[oldx][oldy-1].setState(Block.State.FALLING);
+		blockGrid.setBlock(oldx, oldy, null);
+		if(oldy-2 >= 0 && (blockGrid.getBlock(oldx,oldy-2)==null || blockGrid.getBlock(oldx, oldy-2).getState()==Block.State.FALLING)){
+			fallenBlock.setState(Block.State.FALLING);
 			isOccupied[oldx][oldy-2] = true;
 		}else{
-			blocks[oldx][oldy-1].setState(Block.State.NORMAL);
+			fallenBlock.setState(Block.State.NORMAL);
 			if(!checkForCombosAtBlock(oldx, oldy-1)){
-				blocks[oldx][oldy-1].setSubState(Block.SubState.NORMAL);
-				blocks[oldx][oldy-1].setChainLength(0);
+				fallenBlock.setSubState(Block.SubState.NORMAL);
+				fallenBlock.setChainLength(0);
 			}
 			updateBoardState();
 		}
 	}
 	
 	public void handleCompletedSwapping(int leftx, int y) {
-		Block temp = blocks[leftx][y];
-		blocks[leftx][y] = blocks[leftx+1][y];
-		blocks[leftx+1][y] = temp;
+		Block temp = blockGrid.getBlock(leftx, y);
+		blockGrid.setBlock(leftx, y, blockGrid.getBlock(leftx+1, y));
+		blockGrid.setBlock(leftx+1, y, temp);
 		if(temp!=null){
 			temp.setState(Block.State.NORMAL);
 			temp.setGridPosition(leftx+1, y);
@@ -398,9 +398,10 @@ public class GameBoard {
 		} else {
 			checkForFalling(leftx+1, y);
 		}
-		if(blocks[leftx][y]!=null){
-			blocks[leftx][y].setState(Block.State.NORMAL);
-			blocks[leftx][y].setGridPosition(leftx, y);
+		Block b = blockGrid.getBlock(leftx, y);
+		if(b!=null){
+			b.setState(Block.State.NORMAL);
+			b.setGridPosition(leftx, y);
 			isOccupied[leftx][y] = false;
 			if(y>0) checkForFalling(leftx, y-1);
 			checkForCombosAtBlock(leftx, y);
@@ -412,25 +413,27 @@ public class GameBoard {
 	public void attemptSwap() {
 		Point gridpos = cursor.getGridPosition();
 //		if(boardState == State.MOVING) return;
-		if((blocks[gridpos.x][gridpos.y]!=null 
-				&& !blocks[gridpos.x][gridpos.y].isStable())
-			|| (blocks[gridpos.x+1][gridpos.y]!=null 
-					&& !blocks[gridpos.x+1][gridpos.y].isStable())
+		Block leftBlock = blockGrid.getBlock(gridpos.x, gridpos.y);
+		Block rightBlock = blockGrid.getBlock(gridpos.x+1, gridpos.y);
+		if((leftBlock!=null 
+				&& !leftBlock.isStable())
+			|| (rightBlock!=null 
+					&& !rightBlock.isStable())
 			|| isOccupied[gridpos.x][gridpos.y] || isOccupied[gridpos.x+1][gridpos.y])
 			return; // can't swap!
 		boolean swapRepExists = false;
-		if(blocks[gridpos.x][gridpos.y]!=null){
-			blocks[gridpos.x][gridpos.y].setState(Block.State.SWAPPING);
-			blocks[gridpos.x][gridpos.y].setSwapDirection(1);
-			blocks[gridpos.x][gridpos.y].setSwapRepresentative();
+		if(leftBlock!=null){
+			leftBlock.setState(Block.State.SWAPPING);
+			leftBlock.setSwapDirection(1);
+			leftBlock.setSwapRepresentative();
 			isOccupied[gridpos.x+1][gridpos.y] = true;
 			swapRepExists = true;
 		}
-		if(blocks[gridpos.x+1][gridpos.y]!=null){
-			blocks[gridpos.x+1][gridpos.y].setState(Block.State.SWAPPING);
-			blocks[gridpos.x+1][gridpos.y].setSwapDirection(-1);
+		if(rightBlock!=null){
+			rightBlock.setState(Block.State.SWAPPING);
+			rightBlock.setSwapDirection(-1);
 			isOccupied[gridpos.x][gridpos.y] = true;
-			if(!swapRepExists) blocks[gridpos.x+1][gridpos.y].setSwapRepresentative();
+			if(!swapRepExists) rightBlock.setSwapRepresentative();
 		}
 	}
 

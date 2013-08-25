@@ -66,7 +66,6 @@ public class Block {
 		if( position.y - targetYPos <= GameBoard.FALL_SPEED ){
 			position.y = targetYPos;
 			gameboard.handleCompletedFalling(myGridPos.x, myGridPos.y);
-			myGridPos.y--;
 		}
 		else{ 
 			position.y += -1*GameBoard.FALL_SPEED;
